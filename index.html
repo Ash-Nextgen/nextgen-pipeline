@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NextGen Pipeline</title>
+<style>
+  :root{
+    --bg:#F4F6F3; --surface:#FFFFFF; --surface2:#EDF1EC;
+    --ink:#1B2620; --muted:#5C6B62; --line:#DCE3DC; --line-strong:#C3CDC3;
+    --accent:#17735A; --accent-ink:#FFFFFF; --accent-soft:#E1EFE8;
+    --danger:#A83A32; --warn:#B07A18;
+    --st-prospect:#5B7A99; --st-lead:#2E8C86; --st-demo:#B07A18; --st-closed:#17735A; --st-reengage:#7A5E9E;
+    --shadow:0 1px 2px rgba(27,38,32,.06), 0 4px 16px rgba(27,38,32,.07);
+    --radius:10px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#141A17; --surface:#1C2420; --surface2:#232D28;
+      --ink:#E7EDE7; --muted:#93A399; --line:#2B362F; --line-strong:#3B473F;
+      --accent:#41BD95; --accent-ink:#0E1512; --accent-soft:#1E3A30;
+      --danger:#E07B72; --warn:#D9A648;
+      --st-prospect:#7FA0C0; --st-lead:#4FB3AC; --st-demo:#D9A648; --st-closed:#41BD95; --st-reengage:#A78BCB;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+    }
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+    font-size:14px; line-height:1.45;
+    display:flex; flex-direction:column;
+  }
+  button{font:inherit; color:inherit; background:none; border:none; cursor:pointer; padding:0}
+  input,select,textarea{font:inherit; color:var(--ink); background:var(--surface); border:1px solid var(--line-strong); border-radius:7px; padding:7px 9px; width:100%}
+  input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+  ::placeholder{color:var(--muted); opacity:.8}
+  [hidden]{display:none !important}
+
+  /* ---------- name gate ---------- */
+  #gate{flex:1; display:flex; align-items:center; justify-content:center; padding:24px}
+  .gate-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow);
+    padding:36px 34px; max-width:380px; width:100%; text-align:center;
+  }
+  .gate-card h1{font-size:20px; font-weight:600; margin:0 0 4px}
+  .gate-card .sub{font-size:12px; color:var(--muted); letter-spacing:.05em; text-transform:uppercase; margin-bottom:22px}
+  .gate-card p{color:var(--muted); font-size:13px; margin:0 0 16px}
+  .gate-card input{text-align:center; font-size:15px; margin-bottom:12px}
+  .gbtn{
+    display:inline-flex; align-items:center; gap:10px; width:100%; justify-content:center;
+    padding:10px 16px; border-radius:9px; font-weight:600; font-size:14px;
+    background:var(--accent); color:var(--accent-ink);
+  }
+  .gbtn:hover{filter:brightness(1.08)}
+
+  /* ---------- top bar ---------- */
+  header{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    padding:14px 20px 12px; border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex; align-items:baseline; gap:9px; margin-right:auto}
+  .brand h1{font-size:17px; font-weight:600; letter-spacing:-.01em; margin:0}
+  .brand .sub{font-size:12px; color:var(--muted); letter-spacing:.04em; text-transform:uppercase}
+  #search{width:210px}
+  .btn{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:7px 13px; border-radius:8px; font-weight:600; font-size:13px;
+    background:var(--surface); border:1px solid var(--line-strong);
+  }
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.quiet{border-color:transparent; color:var(--muted)}
+  .btn.quiet:hover{color:var(--ink)}
+
+  /* ---------- board ---------- */
+  main{flex:1; overflow-x:auto; overflow-y:hidden; padding:16px 20px 20px}
+  .board{display:flex; gap:14px; height:100%; min-width:max-content}
+  .col{
+    width:268px; flex:0 0 268px; display:flex; flex-direction:column;
+    background:var(--surface2); border:1px solid var(--line); border-radius:var(--radius);
+    max-height:100%;
+  }
+  .col.drag-over{outline:2px dashed var(--accent); outline-offset:-2px}
+  .col-head{padding:11px 13px 9px; border-bottom:1px solid var(--line)}
+  .col-title{display:flex; align-items:center; gap:8px; font-weight:600; font-size:13px; letter-spacing:.02em}
+  .col-title .dot{width:8px; height:8px; border-radius:50%; flex:none}
+  .col-title .count{margin-left:auto; color:var(--muted); font-weight:500; font-variant-numeric:tabular-nums}
+  .col-total{font-size:12px; color:var(--muted); margin-top:2px; font-variant-numeric:tabular-nums}
+  .col-cards{flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px}
+  .col-add{
+    margin:0 10px 10px; padding:7px; border-radius:8px; font-size:13px; color:var(--muted);
+    border:1px dashed var(--line-strong); text-align:center;
+  }
+  .col-add:hover{color:var(--accent); border-color:var(--accent)}
+  .empty-hint{color:var(--muted); font-size:12.5px; text-align:center; padding:14px 8px}
+
+  /* ---------- cards ---------- */
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:9px;
+    padding:10px 12px; box-shadow:var(--shadow); cursor:grab;
+  }
+  .card:hover{border-color:var(--line-strong)}
+  .card.dragging{opacity:.45}
+  .card .co{font-weight:600; font-size:13.5px; margin:0 0 1px; overflow-wrap:anywhere}
+  .card .who{color:var(--muted); font-size:12.5px; overflow-wrap:anywhere}
+  .card .row{display:flex; align-items:center; gap:8px; margin-top:7px; flex-wrap:wrap}
+  .card .val{font-weight:600; font-size:12.5px; font-variant-numeric:tabular-nums}
+  .chip{
+    font-size:11px; font-weight:600; letter-spacing:.03em;
+    background:var(--accent-soft); color:var(--accent); border-radius:20px; padding:2px 8px;
+  }
+  @media (prefers-color-scheme: dark){ .chip{color:var(--ink)} }
+  .card .age{margin-left:auto; color:var(--muted); font-size:11.5px; font-variant-numeric:tabular-nums}
+  .card .age.stale{color:var(--warn); font-weight:600}
+  .card .next{margin-top:6px; font-size:12px; color:var(--muted); border-top:1px solid var(--line); padding-top:6px; overflow-wrap:anywhere}
+  .card .next b{color:var(--ink); font-weight:600}
+
+  /* ---------- drawer ---------- */
+  #overlay{position:fixed; inset:0; background:rgba(15,22,18,.35); opacity:0; pointer-events:none; transition:opacity .18s}
+  #overlay.open{opacity:1; pointer-events:auto}
+  #drawer{
+    position:fixed; top:0; right:0; bottom:0; width:min(430px,100vw);
+    background:var(--surface); border-left:1px solid var(--line); box-shadow:var(--shadow);
+    transform:translateX(102%); transition:transform .2s ease; display:flex; flex-direction:column; z-index:5;
+  }
+  #drawer.open{transform:none}
+  @media (prefers-reduced-motion: reduce){ #drawer,#overlay{transition:none} }
+  .dw-head{display:flex; align-items:center; gap:10px; padding:16px 18px 10px}
+  .dw-head input.co-input{font-size:16px; font-weight:600; border-color:transparent; background:transparent; padding:4px 6px; margin-left:-6px}
+  .dw-head input.co-input:hover,.dw-head input.co-input:focus{border-color:var(--line-strong); background:var(--surface)}
+  .dw-close{color:var(--muted); font-size:20px; line-height:1; padding:4px 8px; border-radius:6px}
+  .dw-close:hover{color:var(--ink); background:var(--surface2)}
+  .dw-body{flex:1; overflow-y:auto; padding:2px 18px 18px}
+  .fgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .field{display:flex; flex-direction:column; gap:4px}
+  .field.wide{grid-column:1 / -1}
+  .field label{font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+  .sect{font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+        margin:20px 0 8px; padding-top:14px; border-top:1px solid var(--line)}
+  .composer{display:flex; flex-direction:column; gap:8px}
+  .composer textarea{resize:vertical; min-height:60px}
+  .composer .crow{display:flex; gap:8px}
+  .composer select{width:auto; flex:1}
+  .log{list-style:none; margin:12px 0 0; padding:0; display:flex; flex-direction:column; gap:10px}
+  .log li{border-left:2px solid var(--line-strong); padding:2px 0 2px 11px}
+  .log li.sys{border-left-color:var(--line)}
+  .log .meta{font-size:11.5px; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-variant-numeric:tabular-nums}
+  .log .txt{margin-top:2px; white-space:pre-wrap; overflow-wrap:anywhere}
+  .log li.sys .txt{color:var(--muted); font-size:12.5px}
+  .dw-foot{padding:12px 18px; border-top:1px solid var(--line); display:flex; align-items:center}
+  .del{color:var(--danger); font-size:13px; font-weight:600; padding:6px 10px; border-radius:7px}
+  .del:hover{background:var(--surface2)}
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(60px);
+    background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:8px;
+    font-size:13px; font-weight:600; opacity:0; transition:all .2s; pointer-events:none; max-width:90vw; z-index:9;
+  }
+  #toast.show{opacity:1; transform:translateX(-50%)}
+
+  @media (max-width:640px){
+    header{padding:12px 14px 10px}
+    #search{width:130px}
+    main{padding:12px 14px 14px}
+  }
+</style>
+</head>
+<body>
+
+<div id="gate" hidden>
+  <div class="gate-card">
+    <h1>Pipeline</h1>
+    <div class="sub">NextGen Kitchens</div>
+    <p>What's your name? It's shown next to the notes and changes you make, so the team knows who did what.</p>
+    <input id="nameInput" placeholder="e.g. Ash" maxlength="40" autocomplete="off">
+    <button class="gbtn" id="nameBtn">Open the board</button>
+  </div>
+</div>
+
+<header id="topbar" hidden>
+  <div class="brand">
+    <h1>Pipeline</h1><span class="sub">NextGen Kitchens</span>
+  </div>
+  <input id="search" type="search" placeholder="Search deals…" aria-label="Search deals">
+  <button class="btn primary" id="addBtn">+ New deal</button>
+  <button class="btn quiet" id="exportBtn" title="Download a JSON backup">Export</button>
+  <button class="btn quiet" id="importBtn" title="Add deals from a Pipeline backup (.json)">Import</button>
+  <button class="btn quiet" id="whoBtn" title="Change your name"></button>
+  <input type="file" id="importFile" accept=".json,application/json" hidden>
+</header>
+
+<main id="boardWrap" hidden><div class="board" id="board"></div></main>
+
+<div id="overlay"></div>
+<aside id="drawer" aria-label="Deal details"></aside>
+<div id="toast" role="status"></div>
+
+<script type="module">
+/* Shared team pipeline — no-login edition.
+   The publishable key below is designed to be public; while login is
+   disabled, anyone with this page's URL can view and edit the board. */
+const CONFIG = {
+  SUPABASE_URL:      'https://ywrtfztkbavlqtqwuyoa.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_2eXzcJqB2jdBHK7egojfDg_T2MWpJ4y',
+};
+const NAME_KEY = 'ngk-crm-name';
+
+const STAGES = [
+  {id:'prospect', name:'Prospects',  color:'var(--st-prospect)'},
+  {id:'lead',     name:'Leads',      color:'var(--st-lead)'},
+  {id:'demo',     name:'Demo',       color:'var(--st-demo)'},
+  {id:'closed',   name:'Closed',     color:'var(--st-closed)'},
+  {id:'reengage', name:'Re-engage',  color:'var(--st-reengage)'},
+];
+const METHODS = ['Email','LinkedIn','Cold call','Referral','Event','Inbound','Other'];
+const STALE_DAYS = 14;
+const FIELD_COLS = {company:'company', contact:'contact', role:'role', email:'email', phone:'phone',
+                    value:'value', method:'method', nextStep:'next_step', nextDate:'next_date'};
+
+const $ = id => document.getElementById(id);
+
+const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+const sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+let state = {deals: []};
+let openId = null;
+let query = '';
+let booted = false;
+
+/* ---------- name gate ---------- */
+function who(){ return localStorage.getItem(NAME_KEY) || ''; }
+
+function showGate(){
+  $('gate').hidden = false; $('topbar').hidden = true; $('boardWrap').hidden = true;
+  $('nameInput').value = who();
+  $('nameInput').focus();
+}
+async function enterApp(){
+  const name = $('nameInput').value.trim();
+  if(!name){ $('nameInput').focus(); return; }
+  try{ localStorage.setItem(NAME_KEY, name); }catch(e){}
+  $('gate').hidden = true; $('topbar').hidden = false; $('boardWrap').hidden = false;
+  $('whoBtn').textContent = name;
+  if(!booted){ booted = true; await loadAll(); subscribeRealtime(); }
+}
+$('nameBtn').addEventListener('click', enterApp);
+$('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') enterApp(); });
+$('whoBtn').addEventListener('click', showGate);
+
+if(who()){ $('nameInput').value = who(); enterApp(); } else { showGate(); }
+
+/* ---------- data layer ---------- */
+function uid(){ return 'd'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+function rowToDeal(row, acts){
+  return {
+    id: row.id, stage: row.stage,
+    company: row.company||'', contact: row.contact||'', role: row.role||'',
+    email: row.email||'', phone: row.phone||'',
+    value: row.value==null ? '' : String(row.value),
+    method: row.method||'', nextStep: row.next_step||'', nextDate: row.next_date||'',
+    created: new Date(row.created_at).getTime(),
+    log: (acts||[]).map(a=>({ts:new Date(a.ts).getTime(), type:a.type, text:a.text, method:a.method||'', author:a.author||''})),
+  };
+}
+
+async function loadAll(){
+  const [dRes, aRes] = await Promise.all([
+    sb.from('deals').select('*').order('created_at', {ascending:false}),
+    sb.from('activity').select('*').order('ts', {ascending:true}),
+  ]);
+  if(dRes.error || aRes.error){
+    toast('Could not load deals — ' + (dRes.error||aRes.error).message);
+    return;
+  }
+  const byDeal = {};
+  for(const a of aRes.data){ (byDeal[a.deal_id] = byDeal[a.deal_id] || []).push(a); }
+  state.deals = dRes.data.map(r=>rowToDeal(r, byDeal[r.id]));
+  render();
+  if(openId && !drawerHasFocus()) renderDrawer();
+}
+
+let reloadTimer;
+function queueReload(){ clearTimeout(reloadTimer); reloadTimer = setTimeout(loadAll, 400); }
+
+function subscribeRealtime(){
+  sb.channel('crm-live')
+    .on('postgres_changes', {event:'*', schema:'public', table:'deals'}, queueReload)
+    .on('postgres_changes', {event:'*', schema:'public', table:'activity'}, queueReload)
+    .subscribe();
+}
+
+async function dbUpdateDeal(id, patch){
+  const {error} = await sb.from('deals').update(patch).eq('id', id);
+  if(error) toast('Save failed — ' + error.message);
+}
+async function dbLog(dealId, entry){
+  const {error} = await sb.from('activity').insert({deal_id:dealId, type:entry.type, text:entry.text,
+    method:entry.method||'', author:entry.author||who(), ...(entry.ts ? {ts:new Date(entry.ts).toISOString()} : {})});
+  if(error) toast('Save failed — ' + error.message);
+}
+
+/* ---------- helpers ---------- */
+function esc(s){ return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtMoney(n){ n = Number(n)||0; return n ? '$'+n.toLocaleString('en-US',{maximumFractionDigits:0}) : ''; }
+function fmtDate(ts){ return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function fmtDateTime(ts){ return new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+function daysSince(ts){ return Math.floor((Date.now()-ts)/86400000); }
+function ago(ts){ const d = daysSince(ts); return d<=0 ? 'today' : d+'d'; }
+function lastTouch(d){ return d.log.length ? Math.max(...d.log.map(e=>e.ts)) : d.created; }
+function stageName(id){ const s = STAGES.find(s=>s.id===id); return s?s.name:id; }
+function drawerHasFocus(){ return drawer.contains(document.activeElement); }
+
+/* ---------- board ---------- */
+const board = $('board');
+
+function matches(d){
+  if(!query) return true;
+  const q = query.toLowerCase();
+  return [d.company,d.contact,d.role,d.email,d.phone,d.method,d.nextStep,
+          ...d.log.map(e=>e.text+' '+e.author)].join(' ').toLowerCase().includes(q);
+}
+
+function render(){
+  board.innerHTML = '';
+  for(const st of STAGES){
+    const deals = state.deals.filter(d=>d.stage===st.id && matches(d));
+    const total = deals.reduce((s,d)=>s+(Number(d.value)||0),0);
+    const col = document.createElement('section');
+    col.className = 'col';
+    col.dataset.stage = st.id;
+    col.innerHTML = `
+      <div class="col-head">
+        <div class="col-title"><span class="dot" style="background:${st.color}"></span>
+          ${st.name}<span class="count">${deals.length}</span></div>
+        <div class="col-total">${total ? fmtMoney(total) : '—'}</div>
+      </div>
+      <div class="col-cards"></div>
+      <button class="col-add" data-stage="${st.id}">+ Add deal</button>`;
+    const wrap = col.querySelector('.col-cards');
+    if(!deals.length) wrap.innerHTML = `<div class="empty-hint">${query ? 'No matches' : 'Nothing here yet'}</div>`;
+    for(const d of deals) wrap.appendChild(cardEl(d));
+    board.appendChild(col);
+  }
+}
+
+function cardEl(d){
+  const el = document.createElement('article');
+  el.className = 'card';
+  el.draggable = true;
+  el.dataset.id = d.id;
+  el.tabIndex = 0;
+  const touch = lastTouch(d);
+  const stale = d.stage!=='closed' && daysSince(touch) >= STALE_DAYS;
+  el.innerHTML = `
+    <p class="co">${esc(d.company)||'Untitled deal'}</p>
+    ${d.contact?`<div class="who">${esc(d.contact)}${d.role?' · '+esc(d.role):''}</div>`:''}
+    <div class="row">
+      ${d.value?`<span class="val">${fmtMoney(d.value)}</span>`:''}
+      ${d.method?`<span class="chip">${esc(d.method)}</span>`:''}
+      <span class="age${stale?' stale':''}" title="Last activity ${fmtDate(touch)}${stale?' — going stale':''}">${ago(touch)}</span>
+    </div>
+    ${d.nextStep?`<div class="next"><b>Next:</b> ${esc(d.nextStep)}${d.nextDate?' · '+fmtDate(new Date(d.nextDate+'T12:00:00').getTime()):''}</div>`:''}`;
+  el.addEventListener('click', ()=>openDrawer(d.id));
+  el.addEventListener('keydown', e=>{ if(e.key==='Enter') openDrawer(d.id); });
+  el.addEventListener('dragstart', e=>{
+    e.dataTransfer.setData('text/plain', d.id);
+    e.dataTransfer.effectAllowed = 'move';
+    el.classList.add('dragging');
+  });
+  el.addEventListener('dragend', ()=>el.classList.remove('dragging'));
+  return el;
+}
+
+board.addEventListener('dragover', e=>{
+  const col = e.target.closest('.col');
+  if(!col) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  col.classList.add('drag-over');
+});
+board.addEventListener('dragleave', e=>{
+  const col = e.target.closest('.col');
+  if(col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+});
+board.addEventListener('drop', e=>{
+  const col = e.target.closest('.col');
+  if(!col) return;
+  e.preventDefault();
+  col.classList.remove('drag-over');
+  moveDeal(e.dataTransfer.getData('text/plain'), col.dataset.stage);
+});
+board.addEventListener('click', e=>{
+  const btn = e.target.closest('.col-add');
+  if(btn) addDeal(btn.dataset.stage);
+});
+
+async function moveDeal(id, stage){
+  const d = state.deals.find(d=>d.id===id);
+  if(!d || d.stage===stage) return;
+  const from = d.stage;
+  d.stage = stage;
+  const entry = {ts:Date.now(), type:'stage', text:`Moved ${stageName(from)} → ${stageName(stage)}`, author:who()};
+  d.log.push(entry);
+  render();
+  if(openId===id && !drawerHasFocus()) renderDrawer();
+  await dbUpdateDeal(id, {stage});
+  await dbLog(id, entry);
+}
+
+async function addDeal(stage){
+  stage = stage || 'prospect';
+  const d = {
+    id:uid(), stage, created:Date.now(),
+    company:'', contact:'', role:'', email:'', phone:'',
+    value:'', method:'', nextStep:'', nextDate:'',
+    log:[{ts:Date.now(), type:'sys', text:'Deal created in '+stageName(stage), author:who()}],
+  };
+  state.deals.unshift(d);
+  render();
+  openDrawer(d.id, true);
+  const {error} = await sb.from('deals').insert({id:d.id, stage});
+  if(error){ toast('Could not create deal — ' + error.message); return; }
+  await dbLog(d.id, d.log[0]);
+}
+
+/* ---------- drawer ---------- */
+const drawer = $('drawer');
+const overlay = $('overlay');
+
+function openDrawer(id, focusCompany){
+  openId = id;
+  renderDrawer(focusCompany);
+  drawer.classList.add('open');
+  overlay.classList.add('open');
+}
+function closeDrawer(){
+  openId = null;
+  drawer.classList.remove('open');
+  overlay.classList.remove('open');
+}
+overlay.addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrawer(); });
+
+function renderDrawer(focusCompany){
+  const d = state.deals.find(x=>x.id===openId);
+  if(!d){ closeDrawer(); return; }
+  const methodOpts = m => ['<option value="">&mdash;</option>', ...METHODS.map(x=>
+    `<option${x===m?' selected':''}>${x}</option>`)].join('');
+  drawer.innerHTML = `
+    <div class="dw-head">
+      <input class="co-input" data-f="company" value="${esc(d.company)}" placeholder="Company / venue name" aria-label="Company">
+      <button class="dw-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="dw-body">
+      <div class="fgrid">
+        <div class="field"><label>Stage</label>
+          <select data-f="stage">${STAGES.map(s=>`<option value="${s.id}"${s.id===d.stage?' selected':''}>${s.name}</option>`).join('')}</select></div>
+        <div class="field"><label>Deal value ($)</label>
+          <input data-f="value" type="number" min="0" step="100" value="${esc(d.value)}" placeholder="0"></div>
+        <div class="field"><label>Contact</label>
+          <input data-f="contact" value="${esc(d.contact)}" placeholder="Name"></div>
+        <div class="field"><label>Role</label>
+          <input data-f="role" value="${esc(d.role)}" placeholder="e.g. GM, Owner"></div>
+        <div class="field"><label>Email</label>
+          <input data-f="email" type="email" value="${esc(d.email)}" placeholder="name@company.com"></div>
+        <div class="field"><label>Phone</label>
+          <input data-f="phone" value="${esc(d.phone)}" placeholder="(555) 555-5555"></div>
+        <div class="field wide"><label>Outreach method</label>
+          <select data-f="method">${methodOpts(d.method)}</select></div>
+        <div class="field"><label>Next step</label>
+          <input data-f="nextStep" value="${esc(d.nextStep)}" placeholder="e.g. Send pricing"></div>
+        <div class="field"><label>By when</label>
+          <input data-f="nextDate" type="date" value="${esc(d.nextDate)}"></div>
+      </div>
+
+      <div class="sect">Notes &amp; activity</div>
+      <div class="composer">
+        <textarea id="noteText" placeholder="Add a note &mdash; context, objections, what was said&hellip;"></textarea>
+        <div class="crow">
+          <select id="noteMethod" aria-label="Touch method">
+            <option value="">Just a note</option>
+            ${METHODS.map(m=>`<option>Touched via ${m}</option>`).join('')}
+          </select>
+          <button class="btn primary" id="noteAdd">Add</button>
+        </div>
+      </div>
+      <ul class="log">
+        ${[...d.log].sort((a,b)=>b.ts-a.ts).map(e=>`
+          <li class="${e.type==='note'?'':'sys'}">
+            <div class="meta">${fmtDateTime(e.ts)}${e.author?' · '+esc(e.author):''}${e.method?` <span class="chip">${esc(e.method)}</span>`:''}</div>
+            <div class="txt">${esc(e.text)}</div>
+          </li>`).join('')}
+      </ul>
+    </div>
+    <div class="dw-foot">
+      <span style="color:var(--muted); font-size:12px">Added ${fmtDate(d.created)}</span>
+      <span style="margin-left:auto"></span>
+      <button class="del" id="delBtn">Delete deal</button>
+    </div>`;
+
+  drawer.querySelector('.dw-close').addEventListener('click', closeDrawer);
+
+  drawer.querySelectorAll('[data-f]').forEach(inp=>{
+    inp.addEventListener('change', ()=>{
+      const f = inp.dataset.f;
+      if(f==='stage'){ moveDeal(d.id, inp.value); return; }
+      d[f] = inp.value;
+      render();
+      const col = FIELD_COLS[f];
+      dbUpdateDeal(d.id, {[col]: f==='value' ? (inp.value===''?null:Number(inp.value)) : inp.value});
+    });
+  });
+
+  const noteText = drawer.querySelector('#noteText');
+  const noteMethod = drawer.querySelector('#noteMethod');
+  const addNote = async ()=>{
+    const text = noteText.value.trim();
+    const mv = noteMethod.value;
+    const method = mv ? mv.replace('Touched via ','') : '';
+    if(!text && !method) return;
+    const entry = {ts:Date.now(), type:'note', text: text || ('Reached out via '+method), method, author:who()};
+    d.log.push(entry);
+    if(method) d.method = method;
+    render(); renderDrawer();
+    drawer.querySelector('#noteText').focus();
+    await dbLog(d.id, entry);
+    if(method) await dbUpdateDeal(d.id, {method});
+  };
+  drawer.querySelector('#noteAdd').addEventListener('click', addNote);
+  noteText.addEventListener('keydown', e=>{
+    if(e.key==='Enter' && (e.metaKey||e.ctrlKey)) addNote();
+  });
+
+  drawer.querySelector('#delBtn').addEventListener('click', async ()=>{
+    if(!confirm(`Delete "${d.company||'this deal'}" and its notes for the whole team? This can't be undone.`)) return;
+    state.deals = state.deals.filter(x=>x.id!==d.id);
+    render(); closeDrawer();
+    const {error} = await sb.from('deals').delete().eq('id', d.id);
+    toast(error ? 'Delete failed — ' + error.message : 'Deal deleted');
+  });
+
+  if(focusCompany) drawer.querySelector('.co-input').focus();
+}
+
+/* ---------- top bar actions ---------- */
+$('addBtn').addEventListener('click', ()=>addDeal('prospect'));
+$('search').addEventListener('input', e=>{ query = e.target.value.trim(); render(); });
+
+$('exportBtn').addEventListener('click', ()=>{
+  const data = JSON.stringify(state, null, 2);
+  const filename = 'nextgen-pipeline-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  try{
+    const url = URL.createObjectURL(new Blob([data],{type:'application/json'}));
+    const a = Object.assign(document.createElement('a'),{href:url,download:filename});
+    a.click(); URL.revokeObjectURL(url);
+  }catch(e){ toast('Export failed'); }
+});
+
+$('importBtn').addEventListener('click', ()=>$('importFile').click());
+$('importFile').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async ()=>{
+    try{
+      const s = JSON.parse(reader.result);
+      if(!s || !Array.isArray(s.deals)) throw new Error('bad shape');
+      const existing = new Set(state.deals.map(d=>d.id));
+      const fresh = s.deals.filter(d=>d && d.id && !existing.has(d.id));
+      if(!fresh.length){ toast('Nothing new to import'); return; }
+      if(!confirm(`Add ${fresh.length} deal(s) from this backup to the shared board? Existing deals are kept.`)) return;
+      for(const d of fresh){
+        const {error} = await sb.from('deals').insert({
+          id:d.id, stage:d.stage||'prospect', company:d.company||'', contact:d.contact||'',
+          role:d.role||'', email:d.email||'', phone:d.phone||'',
+          value:d.value===''||d.value==null ? null : Number(d.value),
+          method:d.method||'', next_step:d.nextStep||'', next_date:d.nextDate||'',
+          ...(d.created ? {created_at:new Date(d.created).toISOString()} : {}),
+        });
+        if(error){ toast('Import stopped — ' + error.message); return; }
+        for(const en of (d.log||[])){
+          await dbLog(d.id, {ts:en.ts, type:en.type||'note', text:en.text||'', method:en.method||'', author:en.author||who()+' (import)'});
+        }
+      }
+      await loadAll();
+      toast(`Imported ${fresh.length} deal(s)`);
+    }catch(err){ toast("Couldn't read that file — expected a Pipeline backup (.json)"); }
+  };
+  reader.readAsText(file);
+});
+
+let toastTimer;
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>
