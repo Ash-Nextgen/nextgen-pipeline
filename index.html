@@ -9,7 +9,7 @@
     --bg:#F4F6F3; --surface:#FFFFFF; --surface2:#EDF1EC;
     --ink:#1B2620; --muted:#5C6B62; --line:#DCE3DC; --line-strong:#C3CDC3;
     --accent:#17735A; --accent-ink:#FFFFFF; --accent-soft:#E1EFE8;
-    --danger:#A83A32; --warn:#B07A18;
+    --danger:#A83A32; --warn:#B07A18; --ok:#2E7D5B;
     --st-prospect:#5B7A99; --st-lead:#2E8C86; --st-demo:#B07A18; --st-closed:#17735A; --st-reengage:#7A5E9E;
     --shadow:0 1px 2px rgba(27,38,32,.06), 0 4px 16px rgba(27,38,32,.07);
     --radius:10px;
@@ -19,641 +19,715 @@
       --bg:#141A17; --surface:#1C2420; --surface2:#232D28;
       --ink:#E7EDE7; --muted:#93A399; --line:#2B362F; --line-strong:#3B473F;
       --accent:#41BD95; --accent-ink:#0E1512; --accent-soft:#1E3A30;
-      --danger:#E07B72; --warn:#D9A648;
+      --danger:#E07B72; --warn:#D9A648; --ok:#5FCFA6;
       --st-prospect:#7FA0C0; --st-lead:#4FB3AC; --st-demo:#D9A648; --st-closed:#41BD95; --st-reengage:#A78BCB;
       --shadow:0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
     }
   }
-
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font-family:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
-    font-size:14px; line-height:1.45;
-    display:flex; flex-direction:column;
-  }
+  body{margin:0; background:var(--bg); color:var(--ink); font-size:14px; line-height:1.45;
+    font-family:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif; display:flex; flex-direction:column}
   button{font:inherit; color:inherit; background:none; border:none; cursor:pointer; padding:0}
-  input,select,textarea{font:inherit; color:var(--ink); background:var(--surface); border:1px solid var(--line-strong); border-radius:7px; padding:7px 9px; width:100%}
+  input,select,textarea{font:inherit; color:var(--ink); background:var(--surface);
+    border:1px solid var(--line-strong); border-radius:7px; padding:7px 9px; width:100%}
   input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
   ::placeholder{color:var(--muted); opacity:.8}
   [hidden]{display:none !important}
 
-  /* ---------- name gate ---------- */
   #gate{flex:1; display:flex; align-items:center; justify-content:center; padding:24px}
-  .gate-card{
-    background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow);
-    padding:36px 34px; max-width:380px; width:100%; text-align:center;
-  }
+  .gate-card{background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    box-shadow:var(--shadow); padding:36px 34px; max-width:380px; width:100%; text-align:center}
   .gate-card h1{font-size:20px; font-weight:600; margin:0 0 4px}
   .gate-card .sub{font-size:12px; color:var(--muted); letter-spacing:.05em; text-transform:uppercase; margin-bottom:22px}
   .gate-card p{color:var(--muted); font-size:13px; margin:0 0 16px}
   .gate-card input{text-align:center; font-size:15px; margin-bottom:12px}
-  .gbtn{
-    display:inline-flex; align-items:center; gap:10px; width:100%; justify-content:center;
-    padding:10px 16px; border-radius:9px; font-weight:600; font-size:14px;
-    background:var(--accent); color:var(--accent-ink);
-  }
+  .gbtn{display:inline-flex; align-items:center; gap:10px; width:100%; justify-content:center;
+    padding:10px 16px; border-radius:9px; font-weight:600; font-size:14px; background:var(--accent); color:var(--accent-ink)}
   .gbtn:hover{filter:brightness(1.08)}
 
-  /* ---------- top bar ---------- */
-  header{
-    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-    padding:14px 20px 12px; border-bottom:1px solid var(--line);
-  }
-  .brand{display:flex; align-items:baseline; gap:9px; margin-right:auto}
-  .brand h1{font-size:17px; font-weight:600; letter-spacing:-.01em; margin:0}
-  .brand .sub{font-size:12px; color:var(--muted); letter-spacing:.04em; text-transform:uppercase}
-  #search{width:210px}
-  .btn{
-    display:inline-flex; align-items:center; gap:6px;
-    padding:7px 13px; border-radius:8px; font-weight:600; font-size:13px;
-    background:var(--surface); border:1px solid var(--line-strong);
-  }
+  header{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 18px 8px; border-bottom:1px solid var(--line)}
+  .brand{display:flex; align-items:baseline; gap:8px}
+  .brand h1{font-size:16px; font-weight:600; letter-spacing:-.01em; margin:0}
+  .brand .sub{font-size:11px; color:var(--muted); letter-spacing:.04em; text-transform:uppercase}
+  .wip{font-size:12px; color:var(--muted); padding:3px 9px; border:1px solid var(--line-strong); border-radius:20px;
+    font-variant-numeric:tabular-nums; white-space:nowrap}
+  .wip.over{color:var(--danger); border-color:var(--danger); font-weight:600}
+  .spacer{margin-left:auto}
+  #search{width:190px}
+  .btn{display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:8px;
+    font-weight:600; font-size:13px; background:var(--surface); border:1px solid var(--line-strong)}
   .btn:hover{border-color:var(--accent)}
   .btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
-  .btn.primary:hover{filter:brightness(1.08)}
   .btn.quiet{border-color:transparent; color:var(--muted)}
   .btn.quiet:hover{color:var(--ink)}
-  .seg{display:inline-flex; background:var(--surface2); border:1px solid var(--line-strong); border-radius:8px; padding:2px; gap:2px}
-  .seg button{
-    padding:5px 11px; border-radius:6px; font-size:12.5px; font-weight:600; color:var(--muted);
-    display:inline-flex; align-items:center; gap:5px; white-space:nowrap;
-  }
+  .seg{display:inline-flex; background:var(--surface2); border:1px solid var(--line-strong);
+    border-radius:8px; padding:2px; gap:2px}
+  .seg button{padding:5px 10px; border-radius:6px; font-size:12.5px; font-weight:600; color:var(--muted);
+    display:inline-flex; align-items:center; gap:5px; white-space:nowrap}
   .seg button .n{font-variant-numeric:tabular-nums; opacity:.75; font-weight:500}
   .seg button:hover{color:var(--ink)}
   .seg button[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:var(--shadow)}
+  nav.views{display:flex; gap:2px; padding:0 18px; border-bottom:1px solid var(--line); overflow-x:auto}
+  nav.views button{padding:8px 12px; font-size:13px; font-weight:600; color:var(--muted);
+    border-bottom:2px solid transparent; white-space:nowrap}
+  nav.views button:hover{color:var(--ink)}
+  nav.views button[aria-pressed="true"]{color:var(--accent); border-bottom-color:var(--accent)}
+  .viewnote{padding:8px 18px 0; font-size:12px; color:var(--muted)}
 
-  /* ---------- board ---------- */
-  main{flex:1; overflow-x:auto; overflow-y:hidden; padding:16px 20px 20px}
-  .board{display:flex; gap:14px; height:100%; min-width:max-content}
-  .col{
-    width:268px; flex:0 0 268px; display:flex; flex-direction:column;
-    background:var(--surface2); border:1px solid var(--line); border-radius:var(--radius);
-    max-height:100%;
-  }
+  main{flex:1; overflow:auto; padding:12px 18px 20px}
+  /* ---- table view ---- */
+  table{border-collapse:collapse; width:100%; font-size:13px}
+  th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);
+    font-weight:600; padding:6px 8px; border-bottom:1px solid var(--line-strong); position:sticky; top:0; background:var(--bg)}
+  td{padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:var(--surface2)}
+  td.num{font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap}
+  .co{font-weight:600}
+  .sub2{color:var(--muted); font-size:12px}
+  .score{display:inline-block; min-width:30px; text-align:center; font-weight:700; font-variant-numeric:tabular-nums;
+    padding:2px 7px; border-radius:6px; background:var(--surface2)}
+  .score.hot{background:var(--accent); color:var(--accent-ink)}
+  .pill{font-size:11px; font-weight:600; border-radius:20px; padding:2px 8px; white-space:nowrap;
+    background:var(--surface2); color:var(--muted); border:1px solid var(--line-strong)}
+  .pill.ok{background:var(--accent-soft); color:var(--accent); border-color:transparent}
+  .pill.warn{color:var(--warn); border-color:var(--warn)}
+  .pill.bad{color:var(--danger); border-color:var(--danger)}
+  .stale{color:var(--warn); font-weight:600}
+  .empty{color:var(--muted); text-align:center; padding:36px 8px}
+  .gapbar{height:10px; background:var(--surface2); border-radius:6px; overflow:hidden; margin:6px 0 2px}
+  .gapbar i{display:block; height:100%; background:var(--accent)}
+  .kpis{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:12px}
+  .kpi{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 14px; min-width:150px}
+  .kpi b{display:block; font-size:20px; font-variant-numeric:tabular-nums}
+  .kpi span{font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em}
+
+  /* ---- board view ---- */
+  .board{display:flex; gap:12px; min-width:max-content; height:100%}
+  .col{width:250px; flex:0 0 250px; display:flex; flex-direction:column; background:var(--surface2);
+    border:1px solid var(--line); border-radius:var(--radius); max-height:100%}
   .col.drag-over{outline:2px dashed var(--accent); outline-offset:-2px}
-  .col-head{padding:11px 13px 9px; border-bottom:1px solid var(--line)}
-  .col-title{display:flex; align-items:center; gap:8px; font-weight:600; font-size:13px; letter-spacing:.02em}
+  .col-head{padding:10px 12px 8px; border-bottom:1px solid var(--line)}
+  .col-title{display:flex; align-items:center; gap:8px; font-weight:600; font-size:13px}
   .col-title .dot{width:8px; height:8px; border-radius:50%; flex:none}
-  .col-title .count{margin-left:auto; color:var(--muted); font-weight:500; font-variant-numeric:tabular-nums}
-  .col-total{font-size:12px; color:var(--muted); margin-top:2px; font-variant-numeric:tabular-nums}
-  .col-cards{flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px}
-  .col-add{
-    margin:0 10px 10px; padding:7px; border-radius:8px; font-size:13px; color:var(--muted);
-    border:1px dashed var(--line-strong); text-align:center;
-  }
-  .col-add:hover{color:var(--accent); border-color:var(--accent)}
-  .empty-hint{color:var(--muted); font-size:12.5px; text-align:center; padding:14px 8px}
-
-  /* ---------- cards ---------- */
-  .card{
-    background:var(--surface); border:1px solid var(--line); border-radius:9px;
-    padding:10px 12px; box-shadow:var(--shadow); cursor:grab;
-  }
+  .col-title .count{margin-left:auto; color:var(--muted); font-weight:500}
+  .col-cards{flex:1; overflow-y:auto; padding:9px; display:flex; flex-direction:column; gap:8px}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:9px; padding:9px 11px;
+    box-shadow:var(--shadow); cursor:grab}
   .card:hover{border-color:var(--line-strong)}
   .card.dragging{opacity:.45}
-  .card .co{font-weight:600; font-size:13.5px; margin:0 0 1px; overflow-wrap:anywhere}
-  .card .who{color:var(--muted); font-size:12.5px; overflow-wrap:anywhere}
-  .card .row{display:flex; align-items:center; gap:8px; margin-top:7px; flex-wrap:wrap}
-  .card .val{font-weight:600; font-size:12.5px; font-variant-numeric:tabular-nums}
-  .chip{
-    font-size:11px; font-weight:600; letter-spacing:.03em;
-    background:var(--accent-soft); color:var(--accent); border-radius:20px; padding:2px 8px;
-  }
-  @media (prefers-color-scheme: dark){ .chip{color:var(--ink)} }
-  .card .age{margin-left:auto; color:var(--muted); font-size:11.5px; font-variant-numeric:tabular-nums}
-  .card .age.stale{color:var(--warn); font-weight:600}
-  .card .next{margin-top:6px; font-size:12px; color:var(--muted); border-top:1px solid var(--line); padding-top:6px; overflow-wrap:anywhere}
-  .card .next b{color:var(--ink); font-weight:600}
+  .card .row{display:flex; align-items:center; gap:7px; margin-top:6px; flex-wrap:wrap}
+  .col-add{margin:0 9px 9px; padding:6px; border-radius:8px; font-size:13px; color:var(--muted);
+    border:1px dashed var(--line-strong); text-align:center}
+  .col-add:hover{color:var(--accent); border-color:var(--accent)}
 
-  /* ---------- drawer ---------- */
+  /* ---- drawer ---- */
   #overlay{position:fixed; inset:0; background:rgba(15,22,18,.35); opacity:0; pointer-events:none; transition:opacity .18s}
   #overlay.open{opacity:1; pointer-events:auto}
-  #drawer{
-    position:fixed; top:0; right:0; bottom:0; width:min(430px,100vw);
-    background:var(--surface); border-left:1px solid var(--line); box-shadow:var(--shadow);
-    transform:translateX(102%); transition:transform .2s ease; display:flex; flex-direction:column; z-index:5;
-  }
+  #drawer{position:fixed; top:0; right:0; bottom:0; width:min(520px,100vw); background:var(--surface);
+    border-left:1px solid var(--line); box-shadow:var(--shadow); transform:translateX(102%);
+    transition:transform .2s ease; display:flex; flex-direction:column; z-index:5}
   #drawer.open{transform:none}
   @media (prefers-reduced-motion: reduce){ #drawer,#overlay{transition:none} }
-  .dw-head{display:flex; align-items:center; gap:10px; padding:16px 18px 10px}
-  .dw-head input.co-input{font-size:16px; font-weight:600; border-color:transparent; background:transparent; padding:4px 6px; margin-left:-6px}
+  .dw-head{display:flex; align-items:center; gap:10px; padding:14px 18px 8px}
+  .dw-head input.co-input{font-size:16px; font-weight:600; border-color:transparent; background:transparent;
+    padding:4px 6px; margin-left:-6px}
   .dw-head input.co-input:hover,.dw-head input.co-input:focus{border-color:var(--line-strong); background:var(--surface)}
   .dw-close{color:var(--muted); font-size:20px; line-height:1; padding:4px 8px; border-radius:6px}
   .dw-close:hover{color:var(--ink); background:var(--surface2)}
+  .dw-sum{display:flex; gap:8px; flex-wrap:wrap; padding:0 18px 10px; align-items:center}
   .dw-body{flex:1; overflow-y:auto; padding:2px 18px 18px}
-  .fgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-  .field{display:flex; flex-direction:column; gap:4px}
+  .grp{margin:16px 0 6px; padding-top:12px; border-top:1px solid var(--line); font-size:11px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+  .grp:first-child{border-top:none; margin-top:6px}
+  .fgrid{display:grid; grid-template-columns:1fr 1fr; gap:9px}
+  .field{display:flex; flex-direction:column; gap:3px}
   .field.wide{grid-column:1 / -1}
-  .field label{font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
-  .sect{font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
-        margin:20px 0 8px; padding-top:14px; border-top:1px solid var(--line)}
-  .composer{display:flex; flex-direction:column; gap:8px}
-  .composer textarea{resize:vertical; min-height:60px}
+  .field label{font-size:10.5px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--muted)}
+  .field .ro{padding:7px 9px; border:1px dashed var(--line-strong); border-radius:7px; color:var(--muted);
+    font-variant-numeric:tabular-nums; background:var(--surface2)}
+  .hint{font-size:11px; color:var(--muted); margin-top:2px}
+  .composer{display:flex; flex-direction:column; gap:8px; margin-top:6px}
+  .composer textarea{resize:vertical; min-height:58px}
   .composer .crow{display:flex; gap:8px}
   .composer select{width:auto; flex:1}
   .log{list-style:none; margin:12px 0 0; padding:0; display:flex; flex-direction:column; gap:10px}
   .log li{border-left:2px solid var(--line-strong); padding:2px 0 2px 11px}
   .log li.sys{border-left-color:var(--line)}
-  .log .meta{font-size:11.5px; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-variant-numeric:tabular-nums}
+  .log .meta{font-size:11.5px; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap}
   .log .txt{margin-top:2px; white-space:pre-wrap; overflow-wrap:anywhere}
   .log li.sys .txt{color:var(--muted); font-size:12.5px}
-  .dw-foot{padding:12px 18px; border-top:1px solid var(--line); display:flex; align-items:center}
+  .dw-foot{padding:10px 18px; border-top:1px solid var(--line); display:flex; align-items:center; gap:10px}
   .del{color:var(--danger); font-size:13px; font-weight:600; padding:6px 10px; border-radius:7px}
   .del:hover{background:var(--surface2)}
-
-  /* ---------- toast ---------- */
-  #toast{
-    position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(60px);
-    background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:8px;
-    font-size:13px; font-weight:600; opacity:0; transition:all .2s; pointer-events:none; max-width:90vw; z-index:9;
-  }
+  #toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--ink);
+    color:var(--bg); padding:9px 16px; border-radius:8px; font-size:13px; font-weight:600; opacity:0;
+    transition:all .2s; pointer-events:none; max-width:90vw; z-index:9}
   #toast.show{opacity:1; transform:translateX(-50%)}
-
-  @media (max-width:640px){
-    header{padding:12px 14px 10px}
-    #search{width:130px}
-    main{padding:12px 14px 14px}
-  }
+  @media (max-width:640px){ header{padding:10px 12px 8px} #search{width:120px} main{padding:10px 12px} }
 </style>
 </head>
 <body>
 
 <div id="gate" hidden>
   <div class="gate-card">
-    <h1>Pipeline</h1>
-    <div class="sub">NextGen Kitchens</div>
-    <p>What's your name? It's shown next to the notes and changes you make, so the team knows who did what.</p>
+    <h1>Pipeline</h1><div class="sub">NextGen Kitchens</div>
+    <p>What's your name? It's shown next to the notes and changes you make.</p>
     <input id="nameInput" placeholder="e.g. Ash" maxlength="40" autocomplete="off">
     <button class="gbtn" id="nameBtn">Open the board</button>
   </div>
 </div>
 
 <header id="topbar" hidden>
-  <div class="brand">
-    <h1>Pipeline</h1><span class="sub">NextGen Kitchens</span>
+  <div class="brand"><h1>Pipeline</h1><span class="sub">v3</span></div>
+  <span class="wip" id="wip"></span>
+  <div class="seg" id="statusSeg" role="group" aria-label="Filter by status">
+    <button data-status="ACTIVE" aria-pressed="true">Active <span class="n" id="cACT"></span></button>
+    <button data-status="PARKED" aria-pressed="false">Parked <span class="n" id="cPRK"></span></button>
+    <button data-status="ARCHIVE" aria-pressed="false">Archive <span class="n" id="cARC"></span></button>
+    <button data-status="" aria-pressed="false">All <span class="n" id="cALL"></span></button>
   </div>
   <div class="seg" id="regionSeg" role="group" aria-label="Filter by region">
-    <button data-region="" aria-pressed="true">All <span class="n" id="cAll"></span></button>
-    <button data-region="Canada" aria-pressed="false">🇨🇦 Canada <span class="n" id="cCA"></span></button>
-    <button data-region="United States" aria-pressed="false">🇺🇸 US <span class="n" id="cUS"></span></button>
+    <button data-region="" aria-pressed="true">All</button>
+    <button data-region="Canada" aria-pressed="false">🇨🇦</button>
+    <button data-region="United States" aria-pressed="false">🇺🇸</button>
   </div>
-  <input id="search" type="search" placeholder="Search deals…" aria-label="Search deals">
-  <button class="btn primary" id="addBtn">+ New deal</button>
+  <span class="spacer"></span>
+  <input id="search" type="search" placeholder="Search…" aria-label="Search deals">
+  <button class="btn primary" id="addBtn">+ Deal</button>
   <button class="btn quiet" id="exportBtn" title="Download a JSON backup">Export</button>
-  <button class="btn quiet" id="importBtn" title="Add deals from a Pipeline backup (.json)">Import</button>
   <button class="btn quiet" id="whoBtn" title="Change your name"></button>
-  <input type="file" id="importFile" accept=".json,application/json" hidden>
 </header>
 
-<main id="boardWrap" hidden><div class="board" id="board"></div></main>
+<nav class="views" id="viewNav" hidden></nav>
+<div class="viewnote" id="viewNote" hidden></div>
+<main id="mainWrap" hidden></main>
 
 <div id="overlay"></div>
 <aside id="drawer" aria-label="Deal details"></aside>
 <div id="toast" role="status"></div>
 
 <script type="module">
-/* Shared team pipeline — no-login edition.
-   The publishable key below is designed to be public; while login is
-   disabled, anyone with this page's URL can view and edit the board. */
+/* NextGen Prospect CRM v3.0
+   Sort key is Buyable (budget + decider + deadline), not Tier.
+   Computed fields are derived here from raw fields so they can never drift. */
 const CONFIG = {
   SUPABASE_URL:      'https://ywrtfztkbavlqtqwuyoa.supabase.co',
   SUPABASE_ANON_KEY: 'sb_publishable_2eXzcJqB2jdBHK7egojfDg_T2MWpJ4y',
 };
 const NAME_KEY = 'ngk-crm-name';
+const GAP_TARGET = 800000;
+const WIP_CAP    = 20;   // R5
+const STALE_DAYS = 21;   // R6
+/* Revenue model is not yet defined. While null, all revenue-derived fields read
+   "unknown" and the Account_Band component of Priority_Score is 0 for every row
+   (neutral — it cannot distort ranking). Set both numbers to switch it on. */
+const REVENUE_MODEL = null;   // { perVendorYear1: 0, implementationFee: 0 }
 
 const STAGES = [
-  {id:'prospect', name:'Prospects',  color:'var(--st-prospect)'},
-  {id:'lead',     name:'Leads',      color:'var(--st-lead)'},
-  {id:'demo',     name:'Demo',       color:'var(--st-demo)'},
-  {id:'closed',   name:'Closed',     color:'var(--st-closed)'},
-  {id:'reengage', name:'Re-engage',  color:'var(--st-reengage)'},
+  {id:'prospect', name:'Prospects', color:'var(--st-prospect)'},
+  {id:'lead',     name:'Leads',     color:'var(--st-lead)'},
+  {id:'demo',     name:'Demo',      color:'var(--st-demo)'},
+  {id:'closed',   name:'Closed',    color:'var(--st-closed)'},
+  {id:'reengage', name:'Re-engage', color:'var(--st-reengage)'},
 ];
 const METHODS = ['Email','LinkedIn','Cold call','Referral','Event','Inbound','Other'];
-const STALE_DAYS = 14;
-const FIELD_COLS = {company:'company', contact:'contact', role:'role', email:'email', phone:'phone',
-                    value:'value', method:'method', nextStep:'next_step', nextDate:'next_date',
-                    location:'location', country:'country'};
-const COUNTRIES = ['Canada','United States'];
+const YNU = ['unknown','Y','N'];
+
+/* field metadata drives the drawer; key = db column */
+const F = [
+ ['A · Identity', [
+  ['venue_type','Venue type','sel',['food hall','food court','mixed-use','airport','stadium','other']],
+  ['city','City','txt'], ['state_prov','State / Prov','txt'], ['country','Country','sel',['','Canada','United States']],
+  ['coverage','Coverage (in-person)','sel',['','Y','N']],
+  ['buyer_entity','Buyer entity','sel',['unknown','landlord','developer','operator','institutional owner']],
+  ['parent_portfolio','Parent portfolio','txt','wide'],
+ ]],
+ ['B · Money is already allocated', [
+  ['capital_status','Capital status','sel',['','under construction','pre-opening','recently opened (<6mo)','open-operating']],
+  ['opening_date','Opening date','date'],
+  ['budget_allocated','Budget allocated','sel',['unknown','confirmed','likely','none']],
+  ['budget_type','Budget type','sel',['unknown','capital line item','opex','none']],
+  ['tech_line_item','Tech line item','sel',YNU],
+  ['trigger_event','Trigger event','sel',['none','construction start','tech RFP','GM hire','renovation','lease-up']],
+  ['trigger_date','Trigger date','date'],
+ ]],
+ ['C · Who signs', [
+  ['contact','Decision maker','txt'], ['dm_title','Title','txt'],
+  ['signs_contract','Signs contract?','sel',YNU],
+  ['email','Email','txt'], ['email_verified','Email verified','sel',['N','Y']],
+  ['champion_name','Champion','txt'], ['champion_title','Champion title','txt'],
+  ['committee_known','Buying committee known','sel',['N','Y']],
+  ['cash_at_signature','Cash at signature ($)','num'],
+  ['contract_model_fit','Contract model fit','sel',['unknown','free transaction','paid implementation','both']],
+ ]],
+ ['D · Incumbent', [
+  ['current_stack','Current stack','sel',['unknown','none','GoTab','Tabski','Toast','Square','Otter','Empower Delivery','proprietary/in-house']],
+  ['competitive_posture','Posture','sel',['unknown','greenfield','rip-and-replace','hybrid/overlay']],
+  ['incumbent_contract_end','Incumbent contract end','date'],
+  ['switching_cost','Switching cost','sel',['unknown','low','med','high']],
+ ]],
+ ['E · Cost of inaction', [
+  ['pain_if_nothing','Pain if nothing changes (specific — blank disqualifies)','area','wide'],
+  ['forcing_function','Forcing function','sel',['none','opening date','lease deadline','reporting mandate','event']],
+ ]],
+ ['F · Size', [
+  ['vendor_count','Vendor count','num'], ['est_annual_gmv','Est annual GMV ($)','num'],
+  ['est_year1_revenue','Est year-1 revenue NGK ($)','num'],
+ ]],
+ ['G · Relationship', [
+  ['warm_path','Warm path','sel',['N','Y']], ['intro_source','Intro source','txt'],
+  ['relationship_strength','Strength','sel',['cold','2nd-degree','known','referred']],
+ ]],
+ ['H · Learning loop', [
+  ['owner','Owner','sel',['Ash','Clayton','Portland rep']],
+  ['disposition','Disposition','sel',['untouched','contacted-no-reply','in-convo','qualified','stalled','lost-competitor','lost-timing','lost-no-budget','won']],
+  ['first_touch_date','First touch','date'], ['last_touch_date','Last touch','date'],
+  ['touch_count','Touch count','num'], ['channel_history','Channel history','txt'],
+  ['reason_quiet','Reason quiet (required if stalled / no-reply)','area','wide'],
+  ['next_step','Next step (specific action)','txt','wide'],
+  ['next_date','Next step date','date'],
+  ['recheck_date','Re-check date (parked)','date'],
+  ['status_override','Status override','sel',['','ACTIVE','PARKED','ARCHIVE']],
+ ]],
+];
+
+const VIEWS = [
+  ['table','Priority',  'R1: Priority_Score desc, then soonest forcing function.'],
+  ['board','Board',     'Kanban by stage. Same filters apply.'],
+  ['v1','This Week',    'V1: ACTIVE rows with a Next_Step_Date within 7 days.'],
+  ['v2','Warm Paths',   'V2: Warm_Path = Y, any status.'],
+  ['v3','Triggers',     'V3: sorted by opening date, next 180 days.'],
+  ['v4','Greenfield',   'V4: Competitive_Posture = greenfield AND Qualified.'],
+  ['v5','Gap Math',     'V5: cumulative Est_Year1_Revenue vs the $800K gap.'],
+  ['v6','Graveyard',    'V6: archived / lost rows with Reason_Quiet — review monthly.'],
+];
 
 const $ = id => document.getElementById(id);
-
 const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
 const sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
 let state = {deals: []};
-let openId = null;
-let query = '';
-let region = '';   // '' = all, else 'Canada' / 'United States'
-let booted = false;
+let openId = null, query = '', region = '', statusF = 'ACTIVE', view = 'table', booted = false;
 
-/* ---------- name gate ---------- */
-function who(){ return localStorage.getItem(NAME_KEY) || ''; }
+/* ---------------- helpers ---------------- */
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today = () => new Date(new Date().toISOString().slice(0,10));
+const dayDiff = (a,b) => Math.round((a-b)/86400000);
+const parseD = s => s ? new Date(s+'T00:00:00') : null;
+const fmtMoney = n => (n==null||n==='') ? '' : '$'+Number(n).toLocaleString('en-US',{maximumFractionDigits:0});
+const fmtDate = s => { const d=parseD(s); return d? d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''; };
+const fmtDT = ts => new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+const who = () => localStorage.getItem(NAME_KEY) || '';
+const uid = () => 'd'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const flagOf = d => d.country==='Canada' ? '🇨🇦' : d.country==='United States' ? '🇺🇸' : '';
 
-function showGate(){
-  $('gate').hidden = false; $('topbar').hidden = true; $('boardWrap').hidden = true;
-  $('nameInput').value = who();
-  $('nameInput').focus();
+/* ---------------- computed fields (section I) ---------------- */
+function forcingDate(d){
+  const cands = [];
+  if(d.forcing_function==='opening date' && d.opening_date) cands.push(d.opening_date);
+  if(d.forcing_function==='reporting mandate' && d.trigger_date) cands.push(d.trigger_date);
+  if(d.forcing_function==='lease deadline' && d.trigger_date) cands.push(d.trigger_date);
+  if(!cands.length && d.opening_date && d.forcing_function!=='none') cands.push(d.opening_date);
+  const fut = cands.map(parseD).filter(x=>x && x>=today()).sort((a,b)=>a-b);
+  return fut[0] || null;
 }
+function compute(d){
+  const fd = forcingDate(d);
+  d._urgency = fd ? dayDiff(fd, today()) : null;
+  d._forcingDate = fd;
+  const lt = parseD(d.last_touch_date);
+  d._daysSince = lt ? dayDiff(today(), lt) : null;
+  d._stale = (d._daysSince!=null && d._daysSince >= STALE_DAYS) ||
+             (d.touch_count>0 && !d.last_touch_date);
+  // revenue-derived
+  if(REVENUE_MODEL && d.vendor_count){
+    d._rev = d.est_year1_revenue ?? (d.vendor_count*REVENUE_MODEL.perVendorYear1 + REVENUE_MODEL.implementationFee);
+  } else d._rev = d.est_year1_revenue ?? null;
+  d._band = d._rev==null ? 'unknown'
+          : d._rev < 25000 ? '<$25K' : d._rev < 75000 ? '$25-75K' : d._rev < 150000 ? '$75-150K' : '$150K+';
+  d._pctGap = d._rev==null ? null : d._rev/GAP_TARGET;
+  // Qualified (spec 50)
+  d._qualified = d.budget_allocated!=='none' && d.signs_contract!=='unknown'
+              && d.forcing_function!=='none' && !!(d.pain_if_nothing||'').trim();
+  // Priority_Score (spec 51)
+  let s = 0, u = d._urgency;
+  if(u!=null && u>=0) s += u<=30?30 : u<=60?25 : u<=90?20 : u<=180?15 : u<=365?8 : 3;
+  s += ({confirmed:25, likely:15, unknown:5, none:0})[d.budget_allocated] ?? 5;
+  if(d.signs_contract==='Y' && d.email_verified==='Y') s += 20;
+  else if(d.signs_contract==='Y') s += 15;
+  else if(d.champion_name || d.contact) s += 8;
+  else if(d.dm_title) s += 3;
+  s += ({'$150K+':15,'$75-150K':11,'$25-75K':6,'<$25K':2,'unknown':0})[d._band];
+  s += d.warm_path==='Y' ? 10 : 0;
+  d._score = s;
+}
+/* Status needs the whole set (R5 cap is global), so it is a second pass. */
+function computeAll(){
+  state.deals.forEach(compute);
+  const cand = [];
+  for(const d of state.deals){
+    let st;
+    if(d.status_override) st = d.status_override;                                   // human wins
+    else if(d.capital_status==='open-operating' && d.forcing_function==='none') st='ARCHIVE';   // R3
+    else if(d.coverage==='N' && d.warm_path==='N' && ['<$25K','$25-75K'].includes(d._band)) st='ARCHIVE'; // R8
+    else if(!d._qualified) st='PARKED';                                             // R2
+    else st='ACTIVE';
+    d._status = st;
+    if(st==='ACTIVE' && !d.status_override) cand.push(d);
+  }
+  cand.sort((a,b)=> b._score-a._score || (a._urgency??9999)-(b._urgency??9999));
+  cand.slice(WIP_CAP).forEach(d=>{ d._status='PARKED'; d._cappedOut=true; });        // R5
+}
+
+/* ---------------- data ---------------- */
+function rowToDeal(row, acts){
+  const d = {...row};
+  d.log = (acts||[]).map(a=>({ts:new Date(a.ts).getTime(), type:a.type, text:a.text, method:a.method||'', author:a.author||''}));
+  d.created = new Date(row.created_at).getTime();
+  return d;
+}
+async function loadAll(){
+  const [dRes,aRes] = await Promise.all([
+    sb.from('deals').select('*').order('created_at',{ascending:false}),
+    sb.from('activity').select('*').order('ts',{ascending:true}),
+  ]);
+  if(dRes.error || aRes.error){ toast('Load failed — '+(dRes.error||aRes.error).message); return; }
+  const by = {};
+  for(const a of aRes.data) (by[a.deal_id] = by[a.deal_id]||[]).push(a);
+  state.deals = dRes.data.map(r=>rowToDeal(r, by[r.id]));
+  computeAll(); render();
+  if(openId && !drawer.contains(document.activeElement)) renderDrawer();
+}
+let rt; const queueReload = ()=>{ clearTimeout(rt); rt=setTimeout(loadAll,400); };
+function subscribe(){
+  sb.channel('crm-live')
+    .on('postgres_changes',{event:'*',schema:'public',table:'deals'},queueReload)
+    .on('postgres_changes',{event:'*',schema:'public',table:'activity'},queueReload)
+    .subscribe();
+}
+async function dbUpdate(id, patch){
+  const {error} = await sb.from('deals').update(patch).eq('id',id);
+  if(error) toast('Save failed — '+error.message);
+}
+async function dbLog(dealId, e){
+  const {error} = await sb.from('activity').insert({deal_id:dealId, type:e.type, text:e.text,
+    method:e.method||'', author:e.author||who(), ...(e.ts?{ts:new Date(e.ts).toISOString()}:{})});
+  if(error) toast('Save failed — '+error.message);
+}
+
+/* ---------------- filtering ---------------- */
+function textMatch(d){
+  if(!query) return true;
+  const q = query.toLowerCase();
+  return [d.company,d.contact,d.dm_title,d.champion_name,d.email,d.city,d.state_prov,d.country,
+          d.parent_portfolio,d.current_stack,d.pain_if_nothing,d.next_step,d.owner,d.disposition,
+          ...(d.log||[]).map(e=>e.text+' '+e.author)].join(' ').toLowerCase().includes(q);
+}
+const inRegion = d => !region || d.country===region;
+function baseSet(){ return state.deals.filter(d=>textMatch(d) && inRegion(d)); }
+function visible(){
+  return baseSet().filter(d=> !statusF || d._status===statusF);
+}
+const byPriority = (a,b)=> b._score-a._score || (a._urgency??9999)-(b._urgency??9999);
+
+/* ---------------- render ---------------- */
+const mainWrap = $('mainWrap');
+function render(){
+  const pool = baseSet();
+  $('cACT').textContent = pool.filter(d=>d._status==='ACTIVE').length;
+  $('cPRK').textContent = pool.filter(d=>d._status==='PARKED').length;
+  $('cARC').textContent = pool.filter(d=>d._status==='ARCHIVE').length;
+  $('cALL').textContent = pool.length;
+  const act = state.deals.filter(d=>d._status==='ACTIVE').length;
+  const untouched = state.deals.filter(d=>d._status==='ACTIVE' && d.disposition==='untouched').length;
+  const w = $('wip');
+  w.textContent = `ACTIVE ${act}/${WIP_CAP} · untouched ${untouched}`;
+  w.className = 'wip' + (act>WIP_CAP ? ' over' : '');
+  w.title = untouched>=WIP_CAP ? 'R4: list is frozen — work the untouched rows before adding more.'
+                               : 'R5 work-in-progress cap. R4 unfreezes new rows below 20 untouched.';
+  const v = VIEWS.find(x=>x[0]===view);
+  $('viewNote').textContent = v ? v[2] : '';
+  ({table:vTable, board:vBoard, v1:v1, v2:v2, v3:v3, v4:v4, v5:v5, v6:v6})[view]();
+}
+function cols(rows, extra){
+  if(!rows.length) return `<div class="empty">No rows match.</div>`;
+  return `<table><thead><tr>
+    <th>Score</th><th>Account</th><th>Status</th><th>Capital / trigger</th><th>Signer</th>
+    <th class="num">Urgency</th><th>Next step</th><th>Owner</th>${extra?`<th>${extra.h}</th>`:''}
+  </tr></thead><tbody>${rows.map(d=>`
+    <tr data-id="${d.id}">
+      <td><span class="score${d._score>=50?' hot':''}">${d._score}</span></td>
+      <td><div class="co">${esc(d.company)||'Untitled'}</div>
+          <div class="sub2">${flagOf(d)} ${esc([d.city,d.state_prov].filter(Boolean).join(', '))}${d.parent_portfolio?' · '+esc(d.parent_portfolio):''}</div></td>
+      <td><span class="pill ${d._status==='ACTIVE'?'ok':d._status==='ARCHIVE'?'bad':''}">${d._status}</span>
+          ${d._qualified?'':'<div class="sub2">unqualified</div>'}</td>
+      <td>${esc(d.capital_status||'—')}<div class="sub2">${esc(d.trigger_event||'')}${d.budget_allocated!=='unknown'?' · budget '+esc(d.budget_allocated):''}</div></td>
+      <td>${esc(d.contact||'—')}<div class="sub2">${d.signs_contract==='Y'?'signer':d.signs_contract==='N'?'champion':'signer unknown'}</div></td>
+      <td class="num">${d._urgency==null?'—':d._urgency+'d'}<div class="sub2">${d._forcingDate?fmtDate(d._forcingDate.toISOString().slice(0,10)):''}</div></td>
+      <td>${esc(d.next_step||'')||'<span class="sub2">—</span>'}<div class="sub2">${fmtDate(d.next_date)}</div></td>
+      <td>${esc(d.owner||'')}<div class="sub2 ${d._stale?'stale':''}">${d._daysSince!=null?d._daysSince+'d since touch':(d.touch_count>0?'touched, date unknown':'untouched')}</div></td>
+      ${extra?`<td>${extra.cell(d)}</td>`:''}
+    </tr>`).join('')}</tbody></table>`;
+}
+function vTable(){ mainWrap.innerHTML = cols(visible().sort(byPriority)); }
+function v1(){
+  const lim = new Date(today()); lim.setDate(lim.getDate()+7);
+  const rows = baseSet().filter(d=>d._status==='ACTIVE' && d.next_date && parseD(d.next_date)<=lim).sort(byPriority);
+  mainWrap.innerHTML = cols(rows);
+}
+function v2(){ mainWrap.innerHTML = cols(baseSet().filter(d=>d.warm_path==='Y').sort(byPriority),
+  {h:'Intro source', cell:d=>esc(d.intro_source||d.relationship_strength||'')}); }
+function v3(){
+  const lim = new Date(today()); lim.setDate(lim.getDate()+180);
+  const rows = baseSet().filter(d=>d._forcingDate && d._forcingDate<=lim)
+    .sort((a,b)=>a._forcingDate-b._forcingDate);
+  mainWrap.innerHTML = cols(rows);
+}
+function v4(){ mainWrap.innerHTML = cols(baseSet().filter(d=>d.competitive_posture==='greenfield' && d._qualified).sort(byPriority)); }
+function v5(){
+  const rows = baseSet().filter(d=>['$75-150K','$150K+'].includes(d._band)).sort(byPriority);
+  const known = baseSet().filter(d=>d._rev!=null);
+  const total = known.reduce((s,d)=>s+d._rev,0);
+  const activeTotal = baseSet().filter(d=>d._status==='ACTIVE' && d._rev!=null).reduce((s,d)=>s+d._rev,0);
+  let cum = 0;
+  const body = rows.length ? cols(rows,{h:'Cumulative', cell:d=>{cum+=d._rev||0; return fmtMoney(cum);}}) :
+    `<div class="empty">No rows have an Est_Year1_Revenue yet — set the revenue model in the app config
+       (or fill the field per row) and this view fills in automatically.</div>`;
+  mainWrap.innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><b>${fmtMoney(activeTotal)||'—'}</b><span>ACTIVE pipeline (year 1)</span></div>
+      <div class="kpi"><b>${fmtMoney(GAP_TARGET)}</b><span>Gap target</span></div>
+      <div class="kpi"><b>${fmtMoney(Math.max(0,GAP_TARGET-activeTotal))}</b><span>Still to find</span></div>
+      <div class="kpi"><b>${known.length}/${baseSet().length}</b><span>Rows with a revenue estimate</span></div>
+    </div>
+    <div class="gapbar"><i style="width:${Math.min(100,activeTotal/GAP_TARGET*100)}%"></i></div>
+    <div class="sub2" style="margin-bottom:14px">Coverage of the $800K gap from ACTIVE rows.</div>${body}`;
+}
+function v6(){
+  const rows = baseSet().filter(d=>d._status==='ARCHIVE' || (d.disposition||'').startsWith('lost'))
+    .sort((a,b)=>(a.company||'').localeCompare(b.company||''));
+  mainWrap.innerHTML = cols(rows, {h:'Reason quiet', cell:d=>esc(d.reason_quiet||'<missing>')});
+}
+function vBoard(){
+  const set = visible();
+  mainWrap.innerHTML = `<div class="board">${STAGES.map(st=>{
+    const ds = set.filter(d=>d.stage===st.id).sort(byPriority);
+    return `<section class="col" data-stage="${st.id}">
+      <div class="col-head"><div class="col-title"><span class="dot" style="background:${st.color}"></span>
+        ${st.name}<span class="count">${ds.length}</span></div></div>
+      <div class="col-cards">${ds.map(d=>`
+        <article class="card" draggable="true" data-id="${d.id}" tabindex="0">
+          <div class="co">${esc(d.company)||'Untitled'}</div>
+          <div class="sub2">${flagOf(d)} ${esc([d.city,d.state_prov].filter(Boolean).join(', '))}</div>
+          <div class="row"><span class="score${d._score>=50?' hot':''}">${d._score}</span>
+            ${d._urgency!=null?`<span class="pill">${d._urgency}d</span>`:''}
+            ${d.warm_path==='Y'?'<span class="pill ok">warm</span>':''}
+            ${d._stale?'<span class="pill warn">stale</span>':''}</div>
+        </article>`).join('') || '<div class="empty">—</div>'}</div>
+      <button class="col-add" data-stage="${st.id}">+ Add</button>
+    </section>`;}).join('')}</div>`;
+}
+
+/* delegated interactions */
+mainWrap.addEventListener('click', e=>{
+  const add = e.target.closest('.col-add'); if(add) return addDeal(add.dataset.stage);
+  const row = e.target.closest('tr[data-id], .card[data-id]');
+  if(row) openDrawer(row.dataset.id);
+});
+mainWrap.addEventListener('dragstart', e=>{
+  const c = e.target.closest('.card'); if(!c) return;
+  e.dataTransfer.setData('text/plain', c.dataset.id); c.classList.add('dragging');
+});
+mainWrap.addEventListener('dragend', e=>{ const c=e.target.closest('.card'); if(c) c.classList.remove('dragging'); });
+mainWrap.addEventListener('dragover', e=>{ const col=e.target.closest('.col'); if(!col) return;
+  e.preventDefault(); col.classList.add('drag-over'); });
+mainWrap.addEventListener('dragleave', e=>{ const col=e.target.closest('.col');
+  if(col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over'); });
+mainWrap.addEventListener('drop', e=>{ const col=e.target.closest('.col'); if(!col) return;
+  e.preventDefault(); col.classList.remove('drag-over');
+  moveStage(e.dataTransfer.getData('text/plain'), col.dataset.stage); });
+
+async function moveStage(id, stage){
+  const d = state.deals.find(x=>x.id===id);
+  if(!d || d.stage===stage) return;
+  const from = d.stage; d.stage = stage;
+  const entry = {ts:Date.now(), type:'stage', text:`Moved ${from} → ${stage}`, author:who()};
+  d.log.push(entry); computeAll(); render();
+  await dbUpdate(id,{stage}); await dbLog(id, entry);
+}
+async function addDeal(stage){
+  stage = stage||'prospect';
+  const d = {id:uid(), stage, company:'', contact:'', email:'', country:region, city:'', state_prov:'',
+    budget_allocated:'unknown', signs_contract:'unknown', forcing_function:'none', pain_if_nothing:'',
+    disposition:'untouched', owner:who()||'Ash', warm_path:'N', email_verified:'N', touch_count:0,
+    coverage:'', capital_status:'', trigger_event:'none', current_stack:'unknown',
+    competitive_posture:'unknown', relationship_strength:'cold', created:Date.now(), created_at:new Date().toISOString(),
+    log:[{ts:Date.now(), type:'sys', text:'Deal created', author:who()}]};
+  state.deals.unshift(d); computeAll(); render(); openDrawer(d.id, true);
+  const {error} = await sb.from('deals').insert({id:d.id, stage, country:d.country, owner:d.owner});
+  if(error){ toast('Create failed — '+error.message); return; }
+  await dbLog(d.id, d.log[0]);
+}
+
+/* ---------------- drawer ---------------- */
+const drawer = $('drawer'), overlay = $('overlay');
+function openDrawer(id, focus){ openId=id; renderDrawer(focus); drawer.classList.add('open'); overlay.classList.add('open'); }
+function closeDrawer(){ openId=null; drawer.classList.remove('open'); overlay.classList.remove('open'); }
+overlay.addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrawer(); });
+
+function fieldHTML(d, [key,label,type,arg,wide]){
+  const w = (arg==='wide'||wide==='wide') ? ' wide' : '';
+  const v = d[key];
+  if(type==='sel'){
+    const opts = Array.isArray(arg)?arg:[];
+    return `<div class="field${w}"><label>${label}</label><select data-f="${key}">${
+      opts.map(o=>`<option value="${esc(o)}"${(v||'')===o?' selected':''}>${esc(o||'—')}</option>`).join('')}</select></div>`;
+  }
+  if(type==='area') return `<div class="field${w}"><label>${label}</label><textarea data-f="${key}" rows="2">${esc(v||'')}</textarea></div>`;
+  const t = type==='num'?'number':type==='date'?'date':'text';
+  return `<div class="field${w}"><label>${label}</label><input data-f="${key}" type="${t}" value="${esc(v??'')}"></div>`;
+}
+function renderDrawer(focus){
+  const d = state.deals.find(x=>x.id===openId);
+  if(!d){ closeDrawer(); return; }
+  drawer.innerHTML = `
+    <div class="dw-head">
+      <input class="co-input" data-f="company" value="${esc(d.company)}" placeholder="Account name" aria-label="Account">
+      <button class="dw-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="dw-sum">
+      <span class="score${d._score>=50?' hot':''}">${d._score}</span>
+      <span class="pill ${d._status==='ACTIVE'?'ok':d._status==='ARCHIVE'?'bad':''}">${d._status}</span>
+      <span class="pill ${d._qualified?'ok':'warn'}">${d._qualified?'Qualified':'Not qualified'}</span>
+      ${d._urgency!=null?`<span class="pill">${d._urgency}d to forcing fn</span>`:''}
+      ${d._stale?'<span class="pill warn">21d+ no touch (R6)</span>':''}
+      ${d._cappedOut?'<span class="pill">below WIP cap (R5)</span>':''}
+    </div>
+    <div class="dw-body">
+      <div class="fgrid"><div class="field"><label>Stage</label><select data-f="stage">${
+        STAGES.map(s=>`<option value="${s.id}"${s.id===d.stage?' selected':''}>${s.name}</option>`).join('')}</select></div>
+        <div class="field"><label>Outreach method</label><select data-f="method">${
+        ['',...METHODS].map(m=>`<option${(d.method||'')===m?' selected':''}>${m||'—'}</option>`).join('')}</select></div></div>
+      ${F.map(([g,fields])=>`<div class="grp">${g}</div><div class="fgrid">${
+        fields.map(f=>fieldHTML(d,f)).join('')}</div>`).join('')}
+      <div class="grp">I · Computed</div>
+      <div class="fgrid">
+        <div class="field"><label>Priority score</label><div class="ro">${d._score}</div></div>
+        <div class="field"><label>Qualified</label><div class="ro">${d._qualified?'TRUE':'FALSE'}</div></div>
+        <div class="field"><label>Urgency window</label><div class="ro">${d._urgency==null?'—':d._urgency+' days'}</div></div>
+        <div class="field"><label>Days since touch</label><div class="ro">${d._daysSince==null?'—':d._daysSince}</div></div>
+        <div class="field"><label>Account band</label><div class="ro">${d._band}</div></div>
+        <div class="field"><label>% of $800K gap</label><div class="ro">${d._pctGap==null?'—':(d._pctGap*100).toFixed(1)+'%'}</div></div>
+        <div class="field wide"><label>Status</label><div class="ro">${d._status}${d._cappedOut?' — qualified but outside the 20-row WIP cap':''}</div>
+          <div class="hint">Status is computed from rules R2/R3/R5/R8. Use “Status override” in section H to force it.</div></div>
+      </div>
+      <div class="grp">Notes &amp; activity</div>
+      <div class="composer">
+        <textarea id="noteText" placeholder="What happened — context, objections, what was said…"></textarea>
+        <div class="crow">
+          <select id="noteMethod"><option value="">Just a note</option>${
+            METHODS.map(m=>`<option>Touched via ${m}</option>`).join('')}</select>
+          <button class="btn primary" id="noteAdd">Add</button>
+        </div>
+      </div>
+      <ul class="log">${[...(d.log||[])].sort((a,b)=>b.ts-a.ts).map(e=>`
+        <li class="${e.type==='note'?'':'sys'}">
+          <div class="meta">${fmtDT(e.ts)}${e.author?' · '+esc(e.author):''}${e.method?` <span class="pill">${esc(e.method)}</span>`:''}</div>
+          <div class="txt">${esc(e.text)}</div></li>`).join('')}</ul>
+    </div>
+    <div class="dw-foot">
+      <span class="sub2">Added ${fmtDate((d.created_at||'').slice(0,10))}</span>
+      <span class="spacer"></span><button class="del" id="delBtn">Delete</button>
+    </div>`;
+
+  drawer.querySelector('.dw-close').addEventListener('click', closeDrawer);
+  drawer.querySelectorAll('[data-f]').forEach(inp=>{
+    inp.addEventListener('change', ()=>{
+      const f = inp.dataset.f;
+      if(f==='stage') return moveStage(d.id, inp.value);
+      let val = inp.value;
+      if(inp.type==='number') val = val===''? null : Number(val);
+      d[f] = val; computeAll(); render(); renderDrawer();
+      dbUpdate(d.id, {[f]: val});
+    });
+  });
+  const nt = drawer.querySelector('#noteText'), nm = drawer.querySelector('#noteMethod');
+  const addNote = async ()=>{
+    const text = nt.value.trim(), mv = nm.value;
+    const method = mv ? mv.replace('Touched via ','') : '';
+    if(!text && !method) return;
+    const iso = new Date().toISOString().slice(0,10);
+    const entry = {ts:Date.now(), type:'note', text: text||('Reached out via '+method), method, author:who()};
+    d.log.push(entry);
+    const patch = {last_touch_date: iso, touch_count: (d.touch_count||0)+1};
+    if(!d.first_touch_date) patch.first_touch_date = iso;
+    if(method){ patch.method = method;
+      patch.channel_history = d.channel_history ? d.channel_history+' > '+method : method; }
+    if(d.disposition==='untouched') patch.disposition = 'contacted-no-reply';
+    Object.assign(d, patch);
+    computeAll(); render(); renderDrawer(); drawer.querySelector('#noteText').focus();
+    await dbLog(d.id, entry); await dbUpdate(d.id, patch);
+  };
+  drawer.querySelector('#noteAdd').addEventListener('click', addNote);
+  nt.addEventListener('keydown', e=>{ if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)) addNote(); });
+  drawer.querySelector('#delBtn').addEventListener('click', async ()=>{
+    if(!confirm(`Delete "${d.company||'this deal'}" and its notes for the whole team? This can't be undone.`)) return;
+    state.deals = state.deals.filter(x=>x.id!==d.id); computeAll(); render(); closeDrawer();
+    const {error} = await sb.from('deals').delete().eq('id', d.id);
+    toast(error?'Delete failed — '+error.message:'Deal deleted');
+  });
+  if(focus) drawer.querySelector('.co-input').focus();
+}
+
+/* ---------------- chrome ---------------- */
+$('viewNav').innerHTML = VIEWS.map(v=>
+  `<button data-view="${v[0]}" aria-pressed="${v[0]===view}">${v[1]}</button>`).join('');
+$('viewNav').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-view]'); if(!b) return;
+  view = b.dataset.view;
+  $('viewNav').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', String(x.dataset.view===view)));
+  render();
+});
+$('statusSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-status]'); if(!b) return;
+  statusF = b.dataset.status;
+  $('statusSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', String(x.dataset.status===statusF)));
+  render();
+});
+$('regionSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-region]'); if(!b) return;
+  region = b.dataset.region;
+  $('regionSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', String(x.dataset.region===region)));
+  render();
+});
+$('addBtn').addEventListener('click', ()=>addDeal('prospect'));
+$('search').addEventListener('input', e=>{ query = e.target.value.trim(); render(); });
+$('exportBtn').addEventListener('click', ()=>{
+  const data = JSON.stringify({deals: state.deals}, null, 2);
+  const url = URL.createObjectURL(new Blob([data],{type:'application/json'}));
+  Object.assign(document.createElement('a'),{href:url,download:'nextgen-pipeline-'+new Date().toISOString().slice(0,10)+'.json'}).click();
+  URL.revokeObjectURL(url);
+});
+let tt; function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show');
+  clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),3200); }
+
+/* ---------------- name gate ---------------- */
+function showGate(){ $('gate').hidden=false; ['topbar','viewNav','viewNote','mainWrap'].forEach(i=>$(i).hidden=true);
+  $('nameInput').value=who(); $('nameInput').focus(); }
 async function enterApp(){
-  const name = $('nameInput').value.trim();
-  if(!name){ $('nameInput').focus(); return; }
-  try{ localStorage.setItem(NAME_KEY, name); }catch(e){}
-  $('gate').hidden = true; $('topbar').hidden = false; $('boardWrap').hidden = false;
-  $('whoBtn').textContent = name;
-  if(!booted){ booted = true; await loadAll(); subscribeRealtime(); }
+  const n = $('nameInput').value.trim(); if(!n){ $('nameInput').focus(); return; }
+  try{ localStorage.setItem(NAME_KEY,n); }catch(e){}
+  $('gate').hidden=true; ['topbar','viewNav','viewNote','mainWrap'].forEach(i=>$(i).hidden=false);
+  $('whoBtn').textContent = n;
+  if(!booted){ booted=true; await loadAll(); subscribe(); }
 }
 $('nameBtn').addEventListener('click', enterApp);
 $('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') enterApp(); });
 $('whoBtn').addEventListener('click', showGate);
-
-if(who()){ $('nameInput').value = who(); enterApp(); } else { showGate(); }
-
-/* ---------- data layer ---------- */
-function uid(){ return 'd'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
-
-function rowToDeal(row, acts){
-  return {
-    id: row.id, stage: row.stage,
-    company: row.company||'', contact: row.contact||'', role: row.role||'',
-    email: row.email||'', phone: row.phone||'',
-    value: row.value==null ? '' : String(row.value),
-    method: row.method||'', nextStep: row.next_step||'', nextDate: row.next_date||'',
-    location: row.location||'', country: row.country||'',
-    created: new Date(row.created_at).getTime(),
-    log: (acts||[]).map(a=>({ts:new Date(a.ts).getTime(), type:a.type, text:a.text, method:a.method||'', author:a.author||''})),
-  };
-}
-
-async function loadAll(){
-  const [dRes, aRes] = await Promise.all([
-    sb.from('deals').select('*').order('created_at', {ascending:false}),
-    sb.from('activity').select('*').order('ts', {ascending:true}),
-  ]);
-  if(dRes.error || aRes.error){
-    toast('Could not load deals — ' + (dRes.error||aRes.error).message);
-    return;
-  }
-  const byDeal = {};
-  for(const a of aRes.data){ (byDeal[a.deal_id] = byDeal[a.deal_id] || []).push(a); }
-  state.deals = dRes.data.map(r=>rowToDeal(r, byDeal[r.id]));
-  render();
-  if(openId && !drawerHasFocus()) renderDrawer();
-}
-
-let reloadTimer;
-function queueReload(){ clearTimeout(reloadTimer); reloadTimer = setTimeout(loadAll, 400); }
-
-function subscribeRealtime(){
-  sb.channel('crm-live')
-    .on('postgres_changes', {event:'*', schema:'public', table:'deals'}, queueReload)
-    .on('postgres_changes', {event:'*', schema:'public', table:'activity'}, queueReload)
-    .subscribe();
-}
-
-async function dbUpdateDeal(id, patch){
-  const {error} = await sb.from('deals').update(patch).eq('id', id);
-  if(error) toast('Save failed — ' + error.message);
-}
-async function dbLog(dealId, entry){
-  const {error} = await sb.from('activity').insert({deal_id:dealId, type:entry.type, text:entry.text,
-    method:entry.method||'', author:entry.author||who(), ...(entry.ts ? {ts:new Date(entry.ts).toISOString()} : {})});
-  if(error) toast('Save failed — ' + error.message);
-}
-
-/* ---------- helpers ---------- */
-function esc(s){ return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function fmtMoney(n){ n = Number(n)||0; return n ? '$'+n.toLocaleString('en-US',{maximumFractionDigits:0}) : ''; }
-function fmtDate(ts){ return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
-function fmtDateTime(ts){ return new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
-function daysSince(ts){ return Math.floor((Date.now()-ts)/86400000); }
-function ago(ts){ const d = daysSince(ts); return d<=0 ? 'today' : d+'d'; }
-function lastTouch(d){ return d.log.length ? Math.max(...d.log.map(e=>e.ts)) : d.created; }
-function stageName(id){ const s = STAGES.find(s=>s.id===id); return s?s.name:id; }
-function drawerHasFocus(){ return drawer.contains(document.activeElement); }
-
-/* ---------- board ---------- */
-const board = $('board');
-
-function matches(d){
-  if(region && d.country !== region) return false;
-  if(!query) return true;
-  const q = query.toLowerCase();
-  return [d.company,d.contact,d.role,d.email,d.phone,d.method,d.nextStep,d.location,d.country,
-          ...d.log.map(e=>e.text+' '+e.author)].join(' ').toLowerCase().includes(q);
-}
-
-function updateRegionCounts(){
-  const inQuery = d => {
-    if(!query) return true;
-    const q = query.toLowerCase();
-    return [d.company,d.contact,d.role,d.email,d.phone,d.method,d.nextStep,d.location,d.country,
-            ...d.log.map(e=>e.text+' '+e.author)].join(' ').toLowerCase().includes(q);
-  };
-  const pool = state.deals.filter(inQuery);
-  $('cAll').textContent = pool.length;
-  $('cCA').textContent  = pool.filter(d=>d.country==='Canada').length;
-  $('cUS').textContent  = pool.filter(d=>d.country==='United States').length;
-}
-
-function render(){
-  updateRegionCounts();
-  board.innerHTML = '';
-  for(const st of STAGES){
-    const deals = state.deals.filter(d=>d.stage===st.id && matches(d));
-    const total = deals.reduce((s,d)=>s+(Number(d.value)||0),0);
-    const col = document.createElement('section');
-    col.className = 'col';
-    col.dataset.stage = st.id;
-    col.innerHTML = `
-      <div class="col-head">
-        <div class="col-title"><span class="dot" style="background:${st.color}"></span>
-          ${st.name}<span class="count">${deals.length}</span></div>
-        <div class="col-total">${total ? fmtMoney(total) : '—'}</div>
-      </div>
-      <div class="col-cards"></div>
-      <button class="col-add" data-stage="${st.id}">+ Add deal</button>`;
-    const wrap = col.querySelector('.col-cards');
-    if(!deals.length) wrap.innerHTML = `<div class="empty-hint">${query||region ? 'No matches' : 'Nothing here yet'}</div>`;
-    for(const d of deals) wrap.appendChild(cardEl(d));
-    board.appendChild(col);
-  }
-}
-
-function cardEl(d){
-  const el = document.createElement('article');
-  el.className = 'card';
-  el.draggable = true;
-  el.dataset.id = d.id;
-  el.tabIndex = 0;
-  const touch = lastTouch(d);
-  const stale = d.stage!=='closed' && daysSince(touch) >= STALE_DAYS;
-  const flag = d.country==='Canada' ? '🇨🇦' : d.country==='United States' ? '🇺🇸' : '';
-  el.innerHTML = `
-    <p class="co">${esc(d.company)||'Untitled deal'}</p>
-    ${d.contact?`<div class="who">${esc(d.contact)}${d.role?' · '+esc(d.role):''}</div>`:''}
-    ${(flag||d.location)?`<div class="who">${flag}${d.location?' '+esc(d.location):''}</div>`:''}
-    <div class="row">
-      ${d.value?`<span class="val">${fmtMoney(d.value)}</span>`:''}
-      ${d.method?`<span class="chip">${esc(d.method)}</span>`:''}
-      <span class="age${stale?' stale':''}" title="Last activity ${fmtDate(touch)}${stale?' — going stale':''}">${ago(touch)}</span>
-    </div>
-    ${d.nextStep?`<div class="next"><b>Next:</b> ${esc(d.nextStep)}${d.nextDate?' · '+fmtDate(new Date(d.nextDate+'T12:00:00').getTime()):''}</div>`:''}`;
-  el.addEventListener('click', ()=>openDrawer(d.id));
-  el.addEventListener('keydown', e=>{ if(e.key==='Enter') openDrawer(d.id); });
-  el.addEventListener('dragstart', e=>{
-    e.dataTransfer.setData('text/plain', d.id);
-    e.dataTransfer.effectAllowed = 'move';
-    el.classList.add('dragging');
-  });
-  el.addEventListener('dragend', ()=>el.classList.remove('dragging'));
-  return el;
-}
-
-board.addEventListener('dragover', e=>{
-  const col = e.target.closest('.col');
-  if(!col) return;
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  col.classList.add('drag-over');
-});
-board.addEventListener('dragleave', e=>{
-  const col = e.target.closest('.col');
-  if(col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
-});
-board.addEventListener('drop', e=>{
-  const col = e.target.closest('.col');
-  if(!col) return;
-  e.preventDefault();
-  col.classList.remove('drag-over');
-  moveDeal(e.dataTransfer.getData('text/plain'), col.dataset.stage);
-});
-board.addEventListener('click', e=>{
-  const btn = e.target.closest('.col-add');
-  if(btn) addDeal(btn.dataset.stage);
-});
-
-async function moveDeal(id, stage){
-  const d = state.deals.find(d=>d.id===id);
-  if(!d || d.stage===stage) return;
-  const from = d.stage;
-  d.stage = stage;
-  const entry = {ts:Date.now(), type:'stage', text:`Moved ${stageName(from)} → ${stageName(stage)}`, author:who()};
-  d.log.push(entry);
-  render();
-  if(openId===id && !drawerHasFocus()) renderDrawer();
-  await dbUpdateDeal(id, {stage});
-  await dbLog(id, entry);
-}
-
-async function addDeal(stage){
-  stage = stage || 'prospect';
-  const d = {
-    id:uid(), stage, created:Date.now(),
-    company:'', contact:'', role:'', email:'', phone:'',
-    value:'', method:'', nextStep:'', nextDate:'',
-    location:'', country: region,
-    log:[{ts:Date.now(), type:'sys', text:'Deal created in '+stageName(stage), author:who()}],
-  };
-  state.deals.unshift(d);
-  render();
-  openDrawer(d.id, true);
-  const {error} = await sb.from('deals').insert({id:d.id, stage, country: d.country});
-  if(error){ toast('Could not create deal — ' + error.message); return; }
-  await dbLog(d.id, d.log[0]);
-}
-
-/* ---------- drawer ---------- */
-const drawer = $('drawer');
-const overlay = $('overlay');
-
-function openDrawer(id, focusCompany){
-  openId = id;
-  renderDrawer(focusCompany);
-  drawer.classList.add('open');
-  overlay.classList.add('open');
-}
-function closeDrawer(){
-  openId = null;
-  drawer.classList.remove('open');
-  overlay.classList.remove('open');
-}
-overlay.addEventListener('click', closeDrawer);
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrawer(); });
-
-function renderDrawer(focusCompany){
-  const d = state.deals.find(x=>x.id===openId);
-  if(!d){ closeDrawer(); return; }
-  const methodOpts = m => ['<option value="">&mdash;</option>', ...METHODS.map(x=>
-    `<option${x===m?' selected':''}>${x}</option>`)].join('');
-  drawer.innerHTML = `
-    <div class="dw-head">
-      <input class="co-input" data-f="company" value="${esc(d.company)}" placeholder="Company / venue name" aria-label="Company">
-      <button class="dw-close" aria-label="Close">&times;</button>
-    </div>
-    <div class="dw-body">
-      <div class="fgrid">
-        <div class="field"><label>Stage</label>
-          <select data-f="stage">${STAGES.map(s=>`<option value="${s.id}"${s.id===d.stage?' selected':''}>${s.name}</option>`).join('')}</select></div>
-        <div class="field"><label>Deal value ($)</label>
-          <input data-f="value" type="number" min="0" step="100" value="${esc(d.value)}" placeholder="0"></div>
-        <div class="field"><label>Contact</label>
-          <input data-f="contact" value="${esc(d.contact)}" placeholder="Name"></div>
-        <div class="field"><label>Role</label>
-          <input data-f="role" value="${esc(d.role)}" placeholder="e.g. GM, Owner"></div>
-        <div class="field"><label>Email</label>
-          <input data-f="email" type="email" value="${esc(d.email)}" placeholder="name@company.com"></div>
-        <div class="field"><label>Phone</label>
-          <input data-f="phone" value="${esc(d.phone)}" placeholder="(555) 555-5555"></div>
-        <div class="field"><label>Location</label>
-          <input data-f="location" value="${esc(d.location)}" placeholder="e.g. Calgary, AB"></div>
-        <div class="field"><label>Country</label>
-          <select data-f="country">${['<option value="">&mdash;</option>', ...COUNTRIES.map(c=>
-            `<option${c===d.country?' selected':''}>${c}</option>`)].join('')}</select></div>
-        <div class="field wide"><label>Outreach method</label>
-          <select data-f="method">${methodOpts(d.method)}</select></div>
-        <div class="field"><label>Next step</label>
-          <input data-f="nextStep" value="${esc(d.nextStep)}" placeholder="e.g. Send pricing"></div>
-        <div class="field"><label>By when</label>
-          <input data-f="nextDate" type="date" value="${esc(d.nextDate)}"></div>
-      </div>
-
-      <div class="sect">Notes &amp; activity</div>
-      <div class="composer">
-        <textarea id="noteText" placeholder="Add a note &mdash; context, objections, what was said&hellip;"></textarea>
-        <div class="crow">
-          <select id="noteMethod" aria-label="Touch method">
-            <option value="">Just a note</option>
-            ${METHODS.map(m=>`<option>Touched via ${m}</option>`).join('')}
-          </select>
-          <button class="btn primary" id="noteAdd">Add</button>
-        </div>
-      </div>
-      <ul class="log">
-        ${[...d.log].sort((a,b)=>b.ts-a.ts).map(e=>`
-          <li class="${e.type==='note'?'':'sys'}">
-            <div class="meta">${fmtDateTime(e.ts)}${e.author?' · '+esc(e.author):''}${e.method?` <span class="chip">${esc(e.method)}</span>`:''}</div>
-            <div class="txt">${esc(e.text)}</div>
-          </li>`).join('')}
-      </ul>
-    </div>
-    <div class="dw-foot">
-      <span style="color:var(--muted); font-size:12px">Added ${fmtDate(d.created)}</span>
-      <span style="margin-left:auto"></span>
-      <button class="del" id="delBtn">Delete deal</button>
-    </div>`;
-
-  drawer.querySelector('.dw-close').addEventListener('click', closeDrawer);
-
-  drawer.querySelectorAll('[data-f]').forEach(inp=>{
-    inp.addEventListener('change', ()=>{
-      const f = inp.dataset.f;
-      if(f==='stage'){ moveDeal(d.id, inp.value); return; }
-      d[f] = inp.value;
-      render();
-      const col = FIELD_COLS[f];
-      dbUpdateDeal(d.id, {[col]: f==='value' ? (inp.value===''?null:Number(inp.value)) : inp.value});
-    });
-  });
-
-  const noteText = drawer.querySelector('#noteText');
-  const noteMethod = drawer.querySelector('#noteMethod');
-  const addNote = async ()=>{
-    const text = noteText.value.trim();
-    const mv = noteMethod.value;
-    const method = mv ? mv.replace('Touched via ','') : '';
-    if(!text && !method) return;
-    const entry = {ts:Date.now(), type:'note', text: text || ('Reached out via '+method), method, author:who()};
-    d.log.push(entry);
-    if(method) d.method = method;
-    render(); renderDrawer();
-    drawer.querySelector('#noteText').focus();
-    await dbLog(d.id, entry);
-    if(method) await dbUpdateDeal(d.id, {method});
-  };
-  drawer.querySelector('#noteAdd').addEventListener('click', addNote);
-  noteText.addEventListener('keydown', e=>{
-    if(e.key==='Enter' && (e.metaKey||e.ctrlKey)) addNote();
-  });
-
-  drawer.querySelector('#delBtn').addEventListener('click', async ()=>{
-    if(!confirm(`Delete "${d.company||'this deal'}" and its notes for the whole team? This can't be undone.`)) return;
-    state.deals = state.deals.filter(x=>x.id!==d.id);
-    render(); closeDrawer();
-    const {error} = await sb.from('deals').delete().eq('id', d.id);
-    toast(error ? 'Delete failed — ' + error.message : 'Deal deleted');
-  });
-
-  if(focusCompany) drawer.querySelector('.co-input').focus();
-}
-
-/* ---------- top bar actions ---------- */
-$('addBtn').addEventListener('click', ()=>addDeal('prospect'));
-$('search').addEventListener('input', e=>{ query = e.target.value.trim(); render(); });
-
-$('regionSeg').addEventListener('click', e=>{
-  const btn = e.target.closest('button[data-region]');
-  if(!btn) return;
-  region = btn.dataset.region;
-  $('regionSeg').querySelectorAll('button').forEach(b=>
-    b.setAttribute('aria-pressed', String(b.dataset.region === region)));
-  render();
-});
-
-$('exportBtn').addEventListener('click', ()=>{
-  const data = JSON.stringify(state, null, 2);
-  const filename = 'nextgen-pipeline-backup-'+new Date().toISOString().slice(0,10)+'.json';
-  try{
-    const url = URL.createObjectURL(new Blob([data],{type:'application/json'}));
-    const a = Object.assign(document.createElement('a'),{href:url,download:filename});
-    a.click(); URL.revokeObjectURL(url);
-  }catch(e){ toast('Export failed'); }
-});
-
-$('importBtn').addEventListener('click', ()=>$('importFile').click());
-$('importFile').addEventListener('change', e=>{
-  const file = e.target.files[0];
-  e.target.value = '';
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = async ()=>{
-    try{
-      const s = JSON.parse(reader.result);
-      if(!s || !Array.isArray(s.deals)) throw new Error('bad shape');
-      const existing = new Set(state.deals.map(d=>d.id));
-      const fresh = s.deals.filter(d=>d && d.id && !existing.has(d.id));
-      if(!fresh.length){ toast('Nothing new to import'); return; }
-      if(!confirm(`Add ${fresh.length} deal(s) from this backup to the shared board? Existing deals are kept.`)) return;
-      for(const d of fresh){
-        const {error} = await sb.from('deals').insert({
-          id:d.id, stage:d.stage||'prospect', company:d.company||'', contact:d.contact||'',
-          role:d.role||'', email:d.email||'', phone:d.phone||'',
-          value:d.value===''||d.value==null ? null : Number(d.value),
-          method:d.method||'', next_step:d.nextStep||'', next_date:d.nextDate||'',
-          location:d.location||'', country:d.country||'',
-          ...(d.created ? {created_at:new Date(d.created).toISOString()} : {}),
-        });
-        if(error){ toast('Import stopped — ' + error.message); return; }
-        for(const en of (d.log||[])){
-          await dbLog(d.id, {ts:en.ts, type:en.type||'note', text:en.text||'', method:en.method||'', author:en.author||who()+' (import)'});
-        }
-      }
-      await loadAll();
-      toast(`Imported ${fresh.length} deal(s)`);
-    }catch(err){ toast("Couldn't read that file — expected a Pipeline backup (.json)"); }
-  };
-  reader.readAsText(file);
-});
-
-let toastTimer;
-function toast(msg){
-  const t = $('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
-}
+if(who()){ $('nameInput').value = who(); enterApp(); } else showGate();
 </script>
 </body>
 </html>
