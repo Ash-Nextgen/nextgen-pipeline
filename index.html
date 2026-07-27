@@ -75,6 +75,14 @@
   .btn.primary:hover{filter:brightness(1.08)}
   .btn.quiet{border-color:transparent; color:var(--muted)}
   .btn.quiet:hover{color:var(--ink)}
+  .seg{display:inline-flex; background:var(--surface2); border:1px solid var(--line-strong); border-radius:8px; padding:2px; gap:2px}
+  .seg button{
+    padding:5px 11px; border-radius:6px; font-size:12.5px; font-weight:600; color:var(--muted);
+    display:inline-flex; align-items:center; gap:5px; white-space:nowrap;
+  }
+  .seg button .n{font-variant-numeric:tabular-nums; opacity:.75; font-weight:500}
+  .seg button:hover{color:var(--ink)}
+  .seg button[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:var(--shadow)}
 
   /* ---------- board ---------- */
   main{flex:1; overflow-x:auto; overflow-y:hidden; padding:16px 20px 20px}
@@ -186,6 +194,11 @@
   <div class="brand">
     <h1>Pipeline</h1><span class="sub">NextGen Kitchens</span>
   </div>
+  <div class="seg" id="regionSeg" role="group" aria-label="Filter by region">
+    <button data-region="" aria-pressed="true">All <span class="n" id="cAll"></span></button>
+    <button data-region="Canada" aria-pressed="false">🇨🇦 Canada <span class="n" id="cCA"></span></button>
+    <button data-region="United States" aria-pressed="false">🇺🇸 US <span class="n" id="cUS"></span></button>
+  </div>
   <input id="search" type="search" placeholder="Search deals…" aria-label="Search deals">
   <button class="btn primary" id="addBtn">+ New deal</button>
   <button class="btn quiet" id="exportBtn" title="Download a JSON backup">Export</button>
@@ -220,7 +233,9 @@ const STAGES = [
 const METHODS = ['Email','LinkedIn','Cold call','Referral','Event','Inbound','Other'];
 const STALE_DAYS = 14;
 const FIELD_COLS = {company:'company', contact:'contact', role:'role', email:'email', phone:'phone',
-                    value:'value', method:'method', nextStep:'next_step', nextDate:'next_date'};
+                    value:'value', method:'method', nextStep:'next_step', nextDate:'next_date',
+                    location:'location', country:'country'};
+const COUNTRIES = ['Canada','United States'];
 
 const $ = id => document.getElementById(id);
 
@@ -230,6 +245,7 @@ const sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 let state = {deals: []};
 let openId = null;
 let query = '';
+let region = '';   // '' = all, else 'Canada' / 'United States'
 let booted = false;
 
 /* ---------- name gate ---------- */
@@ -264,6 +280,7 @@ function rowToDeal(row, acts){
     email: row.email||'', phone: row.phone||'',
     value: row.value==null ? '' : String(row.value),
     method: row.method||'', nextStep: row.next_step||'', nextDate: row.next_date||'',
+    location: row.location||'', country: row.country||'',
     created: new Date(row.created_at).getTime(),
     log: (acts||[]).map(a=>({ts:new Date(a.ts).getTime(), type:a.type, text:a.text, method:a.method||'', author:a.author||''})),
   };
@@ -320,13 +337,28 @@ function drawerHasFocus(){ return drawer.contains(document.activeElement); }
 const board = $('board');
 
 function matches(d){
+  if(region && d.country !== region) return false;
   if(!query) return true;
   const q = query.toLowerCase();
-  return [d.company,d.contact,d.role,d.email,d.phone,d.method,d.nextStep,
+  return [d.company,d.contact,d.role,d.email,d.phone,d.method,d.nextStep,d.location,d.country,
           ...d.log.map(e=>e.text+' '+e.author)].join(' ').toLowerCase().includes(q);
 }
 
+function updateRegionCounts(){
+  const inQuery = d => {
+    if(!query) return true;
+    const q = query.toLowerCase();
+    return [d.company,d.contact,d.role,d.email,d.phone,d.method,d.nextStep,d.location,d.country,
+            ...d.log.map(e=>e.text+' '+e.author)].join(' ').toLowerCase().includes(q);
+  };
+  const pool = state.deals.filter(inQuery);
+  $('cAll').textContent = pool.length;
+  $('cCA').textContent  = pool.filter(d=>d.country==='Canada').length;
+  $('cUS').textContent  = pool.filter(d=>d.country==='United States').length;
+}
+
 function render(){
+  updateRegionCounts();
   board.innerHTML = '';
   for(const st of STAGES){
     const deals = state.deals.filter(d=>d.stage===st.id && matches(d));
@@ -343,7 +375,7 @@ function render(){
       <div class="col-cards"></div>
       <button class="col-add" data-stage="${st.id}">+ Add deal</button>`;
     const wrap = col.querySelector('.col-cards');
-    if(!deals.length) wrap.innerHTML = `<div class="empty-hint">${query ? 'No matches' : 'Nothing here yet'}</div>`;
+    if(!deals.length) wrap.innerHTML = `<div class="empty-hint">${query||region ? 'No matches' : 'Nothing here yet'}</div>`;
     for(const d of deals) wrap.appendChild(cardEl(d));
     board.appendChild(col);
   }
@@ -357,9 +389,11 @@ function cardEl(d){
   el.tabIndex = 0;
   const touch = lastTouch(d);
   const stale = d.stage!=='closed' && daysSince(touch) >= STALE_DAYS;
+  const flag = d.country==='Canada' ? '🇨🇦' : d.country==='United States' ? '🇺🇸' : '';
   el.innerHTML = `
     <p class="co">${esc(d.company)||'Untitled deal'}</p>
     ${d.contact?`<div class="who">${esc(d.contact)}${d.role?' · '+esc(d.role):''}</div>`:''}
+    ${(flag||d.location)?`<div class="who">${flag}${d.location?' '+esc(d.location):''}</div>`:''}
     <div class="row">
       ${d.value?`<span class="val">${fmtMoney(d.value)}</span>`:''}
       ${d.method?`<span class="chip">${esc(d.method)}</span>`:''}
@@ -419,12 +453,13 @@ async function addDeal(stage){
     id:uid(), stage, created:Date.now(),
     company:'', contact:'', role:'', email:'', phone:'',
     value:'', method:'', nextStep:'', nextDate:'',
+    location:'', country: region,
     log:[{ts:Date.now(), type:'sys', text:'Deal created in '+stageName(stage), author:who()}],
   };
   state.deals.unshift(d);
   render();
   openDrawer(d.id, true);
-  const {error} = await sb.from('deals').insert({id:d.id, stage});
+  const {error} = await sb.from('deals').insert({id:d.id, stage, country: d.country});
   if(error){ toast('Could not create deal — ' + error.message); return; }
   await dbLog(d.id, d.log[0]);
 }
@@ -471,6 +506,11 @@ function renderDrawer(focusCompany){
           <input data-f="email" type="email" value="${esc(d.email)}" placeholder="name@company.com"></div>
         <div class="field"><label>Phone</label>
           <input data-f="phone" value="${esc(d.phone)}" placeholder="(555) 555-5555"></div>
+        <div class="field"><label>Location</label>
+          <input data-f="location" value="${esc(d.location)}" placeholder="e.g. Calgary, AB"></div>
+        <div class="field"><label>Country</label>
+          <select data-f="country">${['<option value="">&mdash;</option>', ...COUNTRIES.map(c=>
+            `<option${c===d.country?' selected':''}>${c}</option>`)].join('')}</select></div>
         <div class="field wide"><label>Outreach method</label>
           <select data-f="method">${methodOpts(d.method)}</select></div>
         <div class="field"><label>Next step</label>
@@ -552,6 +592,15 @@ function renderDrawer(focusCompany){
 $('addBtn').addEventListener('click', ()=>addDeal('prospect'));
 $('search').addEventListener('input', e=>{ query = e.target.value.trim(); render(); });
 
+$('regionSeg').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-region]');
+  if(!btn) return;
+  region = btn.dataset.region;
+  $('regionSeg').querySelectorAll('button').forEach(b=>
+    b.setAttribute('aria-pressed', String(b.dataset.region === region)));
+  render();
+});
+
 $('exportBtn').addEventListener('click', ()=>{
   const data = JSON.stringify(state, null, 2);
   const filename = 'nextgen-pipeline-backup-'+new Date().toISOString().slice(0,10)+'.json';
@@ -582,6 +631,7 @@ $('importFile').addEventListener('change', e=>{
           role:d.role||'', email:d.email||'', phone:d.phone||'',
           value:d.value===''||d.value==null ? null : Number(d.value),
           method:d.method||'', next_step:d.nextStep||'', next_date:d.nextDate||'',
+          location:d.location||'', country:d.country||'',
           ...(d.created ? {created_at:new Date(d.created).toISOString()} : {}),
         });
         if(error){ toast('Import stopped — ' + error.message); return; }
