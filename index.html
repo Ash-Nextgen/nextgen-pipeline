@@ -42,6 +42,7 @@
   .gate-card .sub{font-size:12px; color:var(--muted); letter-spacing:.05em; text-transform:uppercase; margin-bottom:22px}
   .gate-card p{color:var(--muted); font-size:13px; margin:0 0 16px}
   .gate-card input{text-align:center; font-size:15px; margin-bottom:12px}
+  .gate-err{color:var(--danger); font-size:12.5px; margin-top:12px; min-height:1em}
   .gbtn{display:inline-flex; align-items:center; gap:10px; width:100%; justify-content:center;
     padding:10px 16px; border-radius:9px; font-weight:600; font-size:14px; background:var(--accent); color:var(--accent-ink)}
   .gbtn:hover{filter:brightness(1.08)}
@@ -206,9 +207,12 @@
 <div id="gate" hidden>
   <div class="gate-card">
     <h1>Pipeline</h1><div class="sub">NextGen Kitchens</div>
-    <p>What's your name? It's shown next to the notes and changes you make.</p>
-    <input id="nameInput" placeholder="e.g. Ash" maxlength="40" autocomplete="off">
-    <button class="gbtn" id="nameBtn">Open the board</button>
+    <p>Sign in with your <b>@nextgenkitchens.com</b> work email.</p>
+    <input id="emailIn" type="email" placeholder="you@nextgenkitchens.com" autocomplete="username" spellcheck="false">
+    <input id="passIn" type="password" placeholder="Password" autocomplete="current-password">
+    <button class="gbtn" id="signinBtn">Sign in</button>
+    <div class="gate-err" id="gateErr"></div>
+    <div class="sub2" style="margin-top:14px">Access is limited to the NextGen Kitchens team.</div>
   </div>
 </div>
 
@@ -267,7 +271,7 @@ const CONFIG = {
   SUPABASE_URL:      'https://ywrtfztkbavlqtqwuyoa.supabase.co',
   SUPABASE_ANON_KEY: 'sb_publishable_2eXzcJqB2jdBHK7egojfDg_T2MWpJ4y',
 };
-const NAME_KEY = 'ngk-crm-name';
+const AUTH_DOMAIN = 'nextgenkitchens.com';   // only email addresses on this domain may sign in
 const GAP_TARGET = 800000;
 const WIP_CAP    = 20;   // R5
 const STALE_DAYS = 21;   // R6
@@ -361,6 +365,7 @@ const sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
 let state = {deals: []};
 let openId = null, query = '', region = '', statusF = 'ACTIVE', view = 'table', booted = false;
+let authUser = null;                  // the signed-in user; null until authenticated
 
 /* ---------------- helpers ---------------- */
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -370,7 +375,7 @@ const parseD = s => s ? new Date(s+'T00:00:00') : null;
 const fmtMoney = n => (n==null||n==='') ? '' : '$'+Number(n).toLocaleString('en-US',{maximumFractionDigits:0});
 const fmtDate = s => { const d=parseD(s); return d? d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''; };
 const fmtDT = ts => new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
-const who = () => localStorage.getItem(NAME_KEY) || '';
+const who = () => (authUser?.email || '').split('@')[0] || '';
 const uid = () => 'd'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const flagOf = d => d.country==='Canada' ? '🇨🇦' : d.country==='United States' ? '🇺🇸' : '';
 
@@ -1037,20 +1042,61 @@ $('aiClear').addEventListener('click', ()=>{ aiMsgs=[]; aiStaged=[]; aiRender();
 $('aiSend').addEventListener('click', aiSend);
 $('aiInput').addEventListener('keydown', e=>{ if(e.key==='Enter' && (e.metaKey||e.ctrlKey)) aiSend(); });
 
-/* ---------------- name gate ---------------- */
-function showGate(){ $('gate').hidden=false; ['topbar','viewNav','viewNote','mainWrap'].forEach(i=>$(i).hidden=true);
-  $('nameInput').value=who(); $('nameInput').focus(); }
-async function enterApp(){
-  const n = $('nameInput').value.trim(); if(!n){ $('nameInput').focus(); return; }
-  try{ localStorage.setItem(NAME_KEY,n); }catch(e){}
-  $('gate').hidden=true; ['topbar','viewNav','viewNote','mainWrap'].forEach(i=>$(i).hidden=false);
-  $('whoBtn').textContent = n;
-  if(!booted){ booted=true; await loadAll(); subscribe(); }
+/* ---------------- sign-in gate ----------------
+   Access is enforced twice: this gate, and row-level security in the database
+   that only accepts @nextgenkitchens.com identities. The second one is what
+   actually protects the data — the gate is only the front door. */
+const PANES = ['topbar','viewNav','viewNote','mainWrap'];
+function showGate(msg){
+  $('gate').hidden = false; PANES.forEach(i=>$(i).hidden = true);
+  $('ai').classList.remove('open'); closeDrawer();
+  if(msg) $('gateErr').textContent = msg;
+  setTimeout(()=>$('emailIn')?.focus(), 60);
 }
-$('nameBtn').addEventListener('click', enterApp);
-$('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') enterApp(); });
-$('whoBtn').addEventListener('click', showGate);
-if(who()){ $('nameInput').value = who(); enterApp(); } else showGate();
+async function enterApp(){
+  $('gate').hidden = true; PANES.forEach(i=>$(i).hidden = false);
+  $('whoBtn').textContent = authUser.email;
+  if(!booted){ booted = true; await loadAll(); subscribe(); }
+}
+async function handleSession(session){
+  const email = (session?.user?.email || '').toLowerCase();
+  if(!session){ authUser = null; booted = false; state.deals = []; showGate(); return; }
+  if(!email.endsWith('@' + AUTH_DOMAIN)){
+    authUser = null; await sb.auth.signOut();
+    showGate(`That account is not an @${AUTH_DOMAIN} address. Use your work email account.`);
+    return;
+  }
+  authUser = session.user;
+  $('gateErr').textContent = '';
+  await enterApp();
+}
+async function doSignIn(){
+  const email = $('emailIn').value.trim().toLowerCase();
+  const password = $('passIn').value;
+  if(!email || !password){ $('gateErr').textContent = 'Enter your email and password.'; return; }
+  if(!email.endsWith('@' + AUTH_DOMAIN)){
+    $('gateErr').textContent = `Use your @${AUTH_DOMAIN} work email.`; return;
+  }
+  $('gateErr').textContent = 'Signing in…';
+  $('signinBtn').disabled = true;
+  const {error} = await sb.auth.signInWithPassword({email, password});
+  $('signinBtn').disabled = false;
+  if(error){
+    $('passIn').value = '';
+    $('gateErr').textContent = /invalid login/i.test(error.message)
+      ? 'That email and password combination was not recognised. Ask Ash to reset it if you are stuck.'
+      : error.message;
+  } else { $('passIn').value = ''; }
+}
+$('signinBtn').addEventListener('click', doSignIn);
+$('emailIn').addEventListener('keydown', e=>{ if(e.key==='Enter') $('passIn').focus(); });
+$('passIn').addEventListener('keydown', e=>{ if(e.key==='Enter') doSignIn(); });
+$('whoBtn').title = 'Sign out';
+$('whoBtn').addEventListener('click', async ()=>{
+  if(confirm('Sign out of the pipeline?')) await sb.auth.signOut();
+});
+sb.auth.onAuthStateChange((_evt, s)=>{ handleSession(s); });
+handleSession((await sb.auth.getSession()).data.session);
 </script>
 </body>
 </html>
