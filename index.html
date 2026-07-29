@@ -62,6 +62,9 @@
   .btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
   .btn.quiet{border-color:transparent; color:var(--muted)}
   .btn.quiet:hover{color:var(--ink)}
+  #ownerSel{padding:6px 8px; border-radius:8px; font-size:12.5px; font-weight:600; color:var(--ink);
+    background:var(--surface2); border:1px solid var(--line-strong); max-width:170px}
+  #ownerSel:hover{border-color:var(--accent)}
   .seg{display:inline-flex; background:var(--surface2); border:1px solid var(--line-strong);
     border-radius:8px; padding:2px; gap:2px}
   .seg button{padding:5px 10px; border-radius:6px; font-size:12.5px; font-weight:600; color:var(--muted);
@@ -230,6 +233,9 @@
     <button data-region="Canada" aria-pressed="false">🇨🇦</button>
     <button data-region="United States" aria-pressed="false">🇺🇸</button>
   </div>
+  <select id="ownerSel" aria-label="Filter by owner" title="Show only one person's deals">
+    <option value="">All owners</option>
+  </select>
   <span class="spacer"></span>
   <input id="search" type="search" placeholder="Search…" aria-label="Search deals">
   <button class="btn" id="aiBtn" title="Ask about the pipeline or make changes in plain English">Ask AI</button>
@@ -364,7 +370,7 @@ const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/su
 const sb = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
 let state = {deals: []};
-let openId = null, query = '', region = '', statusF = 'ACTIVE', view = 'table', booted = false;
+let openId = null, query = '', region = '', statusF = 'ACTIVE', view = 'table', owner = '', booted = false;
 let authUser = null;                  // the signed-in user; null until authenticated
 
 /* ---------------- helpers ---------------- */
@@ -482,7 +488,10 @@ function textMatch(d){
           ...(d.log||[]).map(e=>e.text+' '+e.author)].join(' ').toLowerCase().includes(q);
 }
 const inRegion = d => !region || d.country===region;
-function baseSet(){ return state.deals.filter(d=>textMatch(d) && inRegion(d)); }
+/* Deliberately exact, not a text search: textMatch() also scans note authors, so
+   searching a name returns deals that person merely commented on. */
+const isOwner  = d => !owner || (d.owner||'').trim().toLowerCase() === owner.toLowerCase();
+function baseSet(){ return state.deals.filter(d=>textMatch(d) && inRegion(d) && isOwner(d)); }
 function visible(){
   return baseSet().filter(d=> !statusF || d._status===statusF);
 }
@@ -491,6 +500,7 @@ const byPriority = (a,b)=> b._score-a._score || (a._urgency??9999)-(b._urgency??
 /* ---------------- render ---------------- */
 const mainWrap = $('mainWrap');
 function render(){
+  const keepMainTop = mainWrap.scrollTop;
   const pool = baseSet();
   $('cACT').textContent = pool.filter(d=>d._status==='ACTIVE').length;
   $('cPRK').textContent = pool.filter(d=>d._status==='PARKED').length;
@@ -506,6 +516,8 @@ function render(){
   const v = VIEWS.find(x=>x[0]===view);
   $('viewNote').textContent = v ? v[2] : '';
   ({table:vTable, board:vBoard, v1:v1, v2:v2, v3:v3, v4:v4, v5:v5, v6:v6})[view]();
+  mainWrap.scrollTop = keepMainTop;   // the renderer replaced <main>'s contents; put the reader back
+  syncFilterUI();
 }
 function cols(rows, extra){
   if(!rows.length) return `<div class="empty">No rows match.</div>`;
@@ -649,6 +661,12 @@ function fieldHTML(d, [key,label,type,arg,wide]){
 function renderDrawer(focus){
   const d = state.deals.find(x=>x.id===openId);
   if(!d){ closeDrawer(); return; }
+  /* This rebuilds the drawer wholesale, which destroys .dw-body — the element that
+     holds the scroll position — and drops focus. Snapshot both, restore after. */
+  const keepTop = drawer.querySelector('.dw-body')?.scrollTop || 0;
+  const act = document.activeElement;
+  const keepField = drawer.contains(act) ? (act.dataset?.f || act.id || '') : '';
+  const keepSel = keepField && act.setSelectionRange ? [act.selectionStart, act.selectionEnd] : null;
   drawer.innerHTML = `
     <div class="dw-head">
       <input class="co-input" data-f="company" value="${esc(d.company)}" placeholder="Account name" aria-label="Account">
@@ -735,6 +753,15 @@ function renderDrawer(focus){
     const {error} = await sb.from('deals').delete().eq('id', d.id);
     toast(error?'Delete failed — '+error.message:'Deal deleted');
   });
+  if(keepField){
+    const back = drawer.querySelector(`[data-f="${keepField}"]`) || drawer.querySelector('#'+keepField);
+    if(back){
+      back.focus({preventScroll:true});   // plain focus() scrolls the field into view and undoes the restore below
+      if(keepSel && back.setSelectionRange){ try{ back.setSelectionRange(keepSel[0], keepSel[1]); }catch(e){} }
+    }
+  }
+  const nb = drawer.querySelector('.dw-body');
+  if(nb) nb.scrollTop = keepTop;
   if(focus) drawer.querySelector('.co-input').focus();
 }
 
@@ -767,6 +794,27 @@ $('exportBtn').addEventListener('click', ()=>{
   Object.assign(document.createElement('a'),{href:url,download:'nextgen-pipeline-'+new Date().toISOString().slice(0,10)+'.json'}).click();
   URL.revokeObjectURL(url);
 });
+/* One place that makes the toolbar reflect the filter variables, so a filter set by
+   the AI looks identical to one you clicked — and can be cleared the same way. */
+function syncFilterUI(){
+  const sel = $('ownerSel');
+  const names = [...new Set(state.deals.map(d=>(d.owner||'').trim()).filter(Boolean))].sort();
+  const wanted = ['<option value="">All owners</option>']
+    .concat(names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`)).join('');
+  if(sel.innerHTML !== wanted) sel.innerHTML = wanted;
+  const hit = names.find(n=>n.toLowerCase()===owner.toLowerCase());
+  if(owner && !hit) owner = '';        // owner no longer exists in the data — drop the filter
+  sel.value = hit || '';
+  if($('search').value !== query) $('search').value = query;
+  $('regionSeg').querySelectorAll('button').forEach(x=>
+    x.setAttribute('aria-pressed', String(x.dataset.region===region)));
+  $('statusSeg')?.querySelectorAll('button').forEach(x=>
+    x.setAttribute('aria-pressed', String(x.dataset.status===statusF)));
+  $('viewNav').querySelectorAll('button').forEach(x=>
+    x.setAttribute('aria-pressed', String(x.dataset.view===view)));
+}
+$('ownerSel').addEventListener('change', e=>{ owner = e.target.value; render(); });
+
 let tt; function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show');
   clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),3200); }
 
@@ -793,6 +841,7 @@ const AI_TOOLS = [
      country:{type:'string', enum:['Canada','United States']},
      stage:{type:'string', enum:['prospect','lead','demo','closed','reengage']},
      disposition:{type:'string'},
+     owner:{type:'string', description:'Exact deal owner. Use this for "whose deals" questions — do not put a person name in `text`, which also matches note authors.'},
      qualified:{type:'boolean'},
      stale:{type:'boolean', description:'Only rows with no touch in 21+ days, or touched with no recorded date.'},
      min_score:{type:'integer'}, limit:{type:'integer', description:'Default 25, max 90.'}}}},
@@ -806,6 +855,18 @@ const AI_TOOLS = [
      fields:{type:'object', description:'Field name to new value, e.g. {"next_step":"Call Henry Lee","next_date":"2026-08-01"}.'},
      reason:{type:'string', description:'One short line on why, shown to the user for approval.'}},
      required:['fields','reason']}},
+  {name:'set_view',
+   description:"Change what the board itself is showing — the view tab and the filters. Use this whenever the user says show / filter / switch to / just the …, so the screen matches the answer. Applies immediately; it changes nothing in the database. Pass only the parts you want to change; pass an empty string to clear one.",
+   input_schema:{type:'object', properties:{
+     view:{type:'string', enum:VIEWS.map(v=>v[0]),
+       description:'table=Priority list, board=Kanban by stage, v1=This Week, v2=Warm Paths, v3=Triggers, v4=Greenfield, v5=Gap Math, v6=Graveyard.'},
+     owner:{type:'string', description:'Exact owner name, or "" for all owners.'},
+     status:{type:'string', enum:['ACTIVE','PARKED','ARCHIVE',''], description:'"" shows every status.'},
+     country:{type:'string', enum:['Canada','United States','']},
+     search:{type:'string', description:'Free-text box. "" clears it. Prefer owner/status/country over stuffing a name in here.'}}}},
+  {name:'open_deal',
+   description:'Open one deal\'s detail drawer on screen. Use when the user asks to pull up, open or look at a specific account.',
+   input_schema:{type:'object', properties:{id:{type:'string'}, company:{type:'string'}}}},
   {name:'add_note',
    description:'Append a timestamped note to a deal. Also updates last touch date and touch count.',
    input_schema:{type:'object', properties:{
@@ -838,12 +899,44 @@ const aiSlim = d => ({
 });
 
 async function aiRunTool(name, a){
+  /* View changes apply immediately and are never staged: they are reversible,
+     visible, and putting an approval click in front of "show me X" would make
+     the assistant slower than the toolbar it is replacing. */
+  if(name==='set_view'){
+    const changed = [];
+    if(a.view!=null && VIEWS.some(v=>v[0]===a.view)){ view = a.view; changed.push('view '+(VIEWS.find(v=>v[0]===a.view)[1])); }
+    if(a.owner!=null){
+      if(a.owner===''){ owner=''; changed.push('all owners'); }
+      else {
+        const names = [...new Set(state.deals.map(d=>(d.owner||'').trim()).filter(Boolean))];
+        const hit = names.find(n=>n.toLowerCase()===a.owner.trim().toLowerCase())
+                 || names.find(n=>n.toLowerCase().includes(a.owner.trim().toLowerCase()));
+        if(!hit) return {error:`No deals are owned by "${a.owner}". Owners on file: ${names.sort().join(', ')||'none'}.`};
+        owner = hit; changed.push('owner '+hit);
+      }
+    }
+    if(a.status!=null){ statusF = a.status; changed.push('status '+(a.status||'all')); }
+    if(a.country!=null){ region = a.country; changed.push(a.country||'all regions'); }
+    if(a.search!=null){ query = a.search; changed.push(a.search? 'search "'+a.search+'"' : 'search cleared'); }
+    render();
+    if(changed.length) toast('AI: '+changed.join(' · '));
+    return {applied: changed, now_showing: visible().length, of_total: state.deals.length,
+            note:'The board on screen now shows exactly these rows. Tell the user what is on screen; do not re-list every row unless asked.'};
+  }
+  if(name==='open_deal'){
+    const d = aiFindDeal(a);
+    if(!d) return {error:'No deal matched.'};
+    openDrawer(d.id);
+    return {opened: d.company, id: d.id, note:'The drawer is open on screen.'};
+  }
   if(name==='search_deals'){
     let rows = state.deals.slice();
     if(a.status) rows = rows.filter(d=>d._status===a.status);
     if(a.country) rows = rows.filter(d=>d.country===a.country);
     if(a.stage) rows = rows.filter(d=>d.stage===a.stage);
     if(a.disposition) rows = rows.filter(d=>d.disposition===a.disposition);
+    if(a.owner){ const o=a.owner.trim().toLowerCase();
+      rows = rows.filter(d=>(d.owner||'').trim().toLowerCase()===o); }
     if(a.qualified!=null) rows = rows.filter(d=>d._qualified===a.qualified);
     if(a.stale) rows = rows.filter(d=>d._stale);
     if(a.min_score!=null) rows = rows.filter(d=>d._score>=a.min_score);
@@ -918,6 +1011,12 @@ HOW THIS PIPELINE IS SORTED
 The sort key is "Buyable" — budget + decider + deadline — not subjective fit. Priority_Score = urgency (0-30) + budget certainty (0-25) + decider access (0-20) + account band (0-15, currently 0 for every row because no pricing model exists yet) + warm path (0-10).
 Qualified = budget_allocated is not "none" AND signs_contract is known AND forcing_function is not "none" AND pain_if_nothing is not blank.
 Status is computed, not typed: ACTIVE = qualified and inside the 20-row work-in-progress cap; PARKED = failed the gate or capped out; ARCHIVE = open-operating with no forcing function, or out of coverage with no warm path. A forcing date in the past does not count — that trigger has lapsed.
+
+DRIVING THE SCREEN
+You can change what is on the board, not just describe it. When the user says show / filter / switch to / just the / pull up, call set_view (or open_deal) so the screen matches your answer — then keep the reply to a sentence or two, because they can see the rows. Do not paginate a list they are already looking at.
+When they ask a question instead ("how many…", "which of these…", "what should I do about…"), answer in text and leave the board alone.
+For anything about a person's deals, use the exact "owner" argument on search_deals and set_view. Do not put a person's name in free text — text search also matches note authors, so it returns deals that person only commented on.
+The board currently shows: view=${view}, owner=${owner||'all'}, status=${statusF||'all'}, country=${region||'all'}, search=${query||'none'}.
 
 RULES OF THE HOUSE
 - Never invent a value. If a field is "unknown" or blank, say so plainly — "unknown" is a research task, not a guess.
