@@ -342,7 +342,7 @@ const F = [
   ['relationship_strength','Strength','sel',['cold','2nd-degree','known','referred']],
  ]],
  ['H · Learning loop', [
-  ['owner','Owner','sel',['Ash','Clayton','Portland rep']],
+  ['owner','Owner','ownerlist'],
   ['disposition','Disposition','sel',['untouched','contacted-no-reply','in-convo','qualified','stalled','lost-competitor','lost-timing','lost-no-budget','won']],
   ['first_touch_date','First touch','date'], ['last_touch_date','Last touch','date'],
   ['touch_count','Touch count','num'], ['channel_history','Channel history','txt'],
@@ -653,6 +653,13 @@ function fieldHTML(d, [key,label,type,arg,wide]){
     const opts = Array.isArray(arg)?arg:[];
     return `<div class="field${w}"><label>${label}</label><select data-f="${key}">${
       opts.map(o=>`<option value="${esc(o)}"${(v||'')===o?' selected':''}>${esc(o||'—')}</option>`).join('')}</select></div>`;
+  }
+  if(type==='ownerlist'){
+    const names = [...new Set(['Ash','Clayton','Portland rep',
+      ...state.deals.map(x=>(x.owner||'').trim()).filter(Boolean)])].sort();
+    return `<div class="field${w}"><label>${label}</label>
+      <input data-f="${key}" list="ownerDL" value="${esc(v??'')}" placeholder="Type any name">
+      <datalist id="ownerDL">${names.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></div>`;
   }
   if(type==='area') return `<div class="field${w}"><label>${label}</label><textarea data-f="${key}" rows="2">${esc(v||'')}</textarea></div>`;
   const t = type==='num'?'number':type==='date'?'date':'text';
