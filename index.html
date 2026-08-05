@@ -855,6 +855,14 @@ const AI_TOOLS = [
   {name:'get_deal',
    description:'Return one deal in full, including every field and its complete notes/activity log.',
    input_schema:{type:'object', properties:{id:{type:'string'}, company:{type:'string'}}}},
+  {name:'create_deal',
+   description:'Create a new deal. Requires a company name; any other schema fields may be set at the same time. New deals start as prospects owned by the current user unless you pass owner. NOTE: a new deal is PARKED (not ACTIVE) until it passes the Qualified gate — warn the user it will sit under the Parked filter until budget/signer/forcing-function/pain are filled in.',
+   input_schema:{type:'object', properties:{
+     company:{type:'string'},
+     fields:{type:'object', description:'Optional other fields, e.g. {"city":"Toronto","country":"Canada","owner":"Brittany","contact":"Jane Doe"}.'},
+     allow_duplicate:{type:'boolean', description:'Set true only if the user confirms this is a different account than an existing deal with a similar name.'},
+     reason:{type:'string', description:'One short line on why, shown to the user for approval.'}},
+     required:['company','reason']}},
   {name:'update_deal',
    description:'Change fields on one deal. Only pass fields you are changing. Use exact field names from the schema.',
    input_schema:{type:'object', properties:{
@@ -880,6 +888,16 @@ const AI_TOOLS = [
      id:{type:'string'}, company:{type:'string'}, text:{type:'string'},
      method:{type:'string', enum:METHODS}}, required:['text']}},
 ];
+
+const AI_COLS = new Set(['company','contact','email','phone','role','method','value',
+  'stage','disposition','owner','reason_quiet','next_step',
+  'next_date','recheck_date','status_override','intro_source','channel_history','first_touch_date',
+  'last_touch_date','touch_count','champion_name','champion_title','committee_known','dm_title',
+  'signs_contract','email_verified','warm_path','relationship_strength','venue_type','buyer_entity',
+  'parent_portfolio','capital_status','opening_date','budget_allocated','budget_type','tech_line_item',
+  'trigger_event','trigger_date','current_stack','competitive_posture','switching_cost',
+  'incumbent_contract_end','pain_if_nothing','forcing_function','vendor_count','est_annual_gmv',
+  'est_year1_revenue','cash_at_signature','contract_model_fit','coverage','city','state_prov','country']);
 
 function aiFindDeal(a){
   if(a.id){ const d = state.deals.find(x=>x.id===a.id); if(d) return d; }
@@ -961,18 +979,45 @@ async function aiRunTool(name, a){
       channel_history:d.channel_history, recheck_date:d.recheck_date,
       notes:(d.log||[]).slice().sort((x,y)=>x.ts-y.ts).map(e=>({when:new Date(e.ts).toISOString().slice(0,10), who:e.author, text:e.text}))};
   }
+  if(name==='create_deal'){
+    const company = (a.company||'').trim();
+    if(!company) return {error:'company is required.'};
+    const dup = state.deals.find(x=>(x.company||'').trim().toLowerCase()===company.toLowerCase());
+    if(dup && !a.allow_duplicate)
+      return {error:`A deal named "${dup.company}" already exists (id ${dup.id}). Update that one, or ask the user to confirm this is a different account and retry with allow_duplicate:true.`};
+    const patch = {}, bad = [];
+    for(const [k,v] of Object.entries(a.fields||{})) AI_COLS.has(k) ? patch[k]=v : bad.push(k);
+    const label = `NEW deal — ${company}` +
+      (Object.keys(patch).length ? ` (${Object.entries(patch).map(([k,v])=>k+': '+JSON.stringify(v)).join(', ')})` : '');
+    const apply = async ()=>{
+      const d = {id:uid(), stage:'prospect', company, contact:'', email:'', country:'', city:'',
+        budget_allocated:'unknown', signs_contract:'unknown', forcing_function:'none', pain_if_nothing:'',
+        disposition:'untouched', owner:who()||'Ash', warm_path:'N', email_verified:'N', touch_count:0,
+        coverage:'', capital_status:'', trigger_event:'none', current_stack:'unknown',
+        competitive_posture:'unknown', relationship_strength:'cold',
+        created:Date.now(), created_at:new Date().toISOString(), log:[]};
+      Object.assign(d, patch);
+      state.deals.unshift(d); computeAll(); render();
+      const {error} = await sb.from('deals').insert({id:d.id, stage:d.stage, country:d.country, owner:d.owner});
+      if(error) throw new Error(error.message);
+      const extras = {...patch}; delete extras.owner; delete extras.country;
+      if(Object.keys(extras).length) await dbUpdate(d.id, extras);
+      await dbLog(d.id, {ts:Date.now(), type:'sys', text:`Deal created by AI — ${a.reason}`, author:'AI · '+who()});
+      // a fresh deal is PARKED; make sure the creator can actually see it
+      if(!visible().some(x=>x.id===d.id)){ statusF=''; render(); }
+      openDrawer(d.id);
+    };
+    if($('aiAuto').checked){ await apply();
+      return {applied:true, created:company, status:'PARKED',
+        note:'Created and opened on screen. It stays PARKED until the Qualified gate is met (budget, signer, forcing function, pain).'}; }
+    aiStaged.push({label, apply});
+    return {staged:true, awaiting_user_approval:true, change:label,
+      note:'Not created yet — the user must approve. Remind them it will be PARKED until it qualifies.'};
+  }
   if(name==='update_deal'){
     const d = aiFindDeal(a);
     if(!d) return {error:'No deal matched.'};
-    const cols = new Set(['company','contact','email','phone','role','method','value',
-      'stage','disposition','owner','reason_quiet','next_step',
-      'next_date','recheck_date','status_override','intro_source','channel_history','first_touch_date',
-      'last_touch_date','touch_count','champion_name','champion_title','committee_known','dm_title',
-      'signs_contract','email_verified','warm_path','relationship_strength','venue_type','buyer_entity',
-      'parent_portfolio','capital_status','opening_date','budget_allocated','budget_type','tech_line_item',
-      'trigger_event','trigger_date','current_stack','competitive_posture','switching_cost',
-      'incumbent_contract_end','pain_if_nothing','forcing_function','vendor_count','est_annual_gmv',
-      'est_year1_revenue','cash_at_signature','contract_model_fit','coverage','city','state_prov','country']);
+    const cols = AI_COLS;
     const patch = {}, bad = [];
     for(const [k,v] of Object.entries(a.fields||{})) cols.has(k) ? patch[k]=v : bad.push(k);
     if(!Object.keys(patch).length) return {error:'No valid fields. Unknown: '+bad.join(', ')};
@@ -1026,6 +1071,7 @@ For anything about a person's deals, use the exact "owner" argument on search_de
 The board currently shows: view=${view}, owner=${owner||'all'}, status=${statusF||'all'}, country=${region||'all'}, search=${query||'none'}.
 
 RULES OF THE HOUSE
+- You can create deals with create_deal (company required). Check for an existing deal with a similar name first; never silently create a duplicate. A new deal is PARKED until it passes the Qualified gate — always tell the user that.
 - Never invent a value. If a field is "unknown" or blank, say so plainly — "unknown" is a research task, not a guess.
 - Revenue, account band and the $800K gap are not computable yet: no pricing model exists. Say that rather than estimating.
 - Answer from tool results, not from this roster summary alone — the roster below is an index, not the data.
